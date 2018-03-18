@@ -1,0 +1,24 @@
+TOPIC
+    about_PSTModuleHelper
+
+SHORT DESCRIPTION
+
+    PSModuleHelper is a PowerShell module for making it easier to build modules.
+    
+LONG DESCRIPTION
+
+    PSModuleHelper is a PowerShell module for making it easier to build modules.
+
+POWERSHELL COMPATIBILITY
+
+    PowerShell v3.
+
+FEEDBACK
+
+    https://github.com/pauby/psmodulehelper
+
+CONTRIBUTING
+
+    https://github.com/pauby/psmodulehelper
+
+SEE ALSO

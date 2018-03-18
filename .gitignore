@@ -1,0 +1,7 @@
+*-test.*
+*.ignore
+.git
+output/
+help/
+[0-9].*/
+buildoutput/
