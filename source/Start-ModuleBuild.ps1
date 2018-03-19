@@ -92,6 +92,11 @@ Enter-Build {
     "`n"
 }
 
+Exit-Build {
+    $lines
+    Write-Host "Build Ended: $(Get-Date)"
+}
+
 # Synopsis: Remove build folder
 task Clean {
     try {
