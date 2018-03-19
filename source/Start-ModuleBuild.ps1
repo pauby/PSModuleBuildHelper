@@ -40,9 +40,9 @@ if($ENV:BHCommitMessage -match "!verbose") {
 task Build Clean,
 TestSyntax,
 TestAttributeSyntax,
-UpdateMetadata,
 CopyModuleFilesToBuild,
 MergeFunctionsToModuleScript,
+UpdateMetadata,
 UpdateModuleHelp,
 MakeHTMLDocs,
 CopyLicense
@@ -245,7 +245,7 @@ task MergeFunctionsToModuleScript {
 
 task UpdateMetadata {
     try {
-        $path = $BuildInfo.SourceManifestPath
+        $path = $BuildInfo.BuildManifestPath
 
         # Manifest Version
         Update-Metadata -Path $path -PropertyName ModuleVersion -Value $BuildInfo.ReleaseVersion -ErrorAction stop
