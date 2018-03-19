@@ -81,13 +81,13 @@ function New-GithubRelease {
     }
 
     $releaseParams = @{
-        Uri         = "https://api.github.com/repos/$GitHubUsername/$GitHubRepository/releases";
-        Method      = 'POST';
+        Uri         = "https://api.github.com/repos/$GitHubUsername/$GitHubRepository/releases"
+        Method      = 'POST'
         Headers     = @{
             Authorization = 'Basic ' + [Convert]::ToBase64String(
                 [Text.Encoding]::ASCII.GetBytes($GitHubApiKey + ":x-oauth-basic"));
         }
-        ContentType = 'application/json';
+        ContentType = 'application/json'
         Body        = (ConvertTo-Json $releaseData -Compress)
     }
 
@@ -101,13 +101,13 @@ function New-GithubRelease {
     $uploadUri = $uploadUri -replace '\{\?name.*\}', "?name=$artifact"
 
     $uploadParams = @{
-        Uri         = $uploadUri;
-        Method      = 'POST';
+        Uri         = $uploadUri
+        Method      = 'POST'
         Headers     = @{
             Authorization = 'Basic ' + [Convert]::ToBase64String(
                 [Text.Encoding]::ASCII.GetBytes($GitHubApiKey + ":x-oauth-basic"));
         }
-        ContentType = 'application/zip';
+        ContentType = 'application/zip'
         InFile      = $ArtifactPath
     }
 
