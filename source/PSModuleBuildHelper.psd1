@@ -69,7 +69,7 @@ PowerShellVersion = '3.0'
 # NestedModules = @()
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = @('Convert-SensitiveData','Get-BuildEnvironment','Get-BuildItem','Get-BuildOperatingSystemDetail','Get-BuildPowerShellDetail','Get-BuildScript','Get-BuildSystem','Get-BuildSystemEnvironment','Get-ChangelogVersion','Get-FunctionParameter','Get-GitBranchName','Get-GitChange','Get-GitLastCommitHash','Get-GitLastCommitMessage','Get-ManifestVersion','Get-NextReleaseVersion','Get-PowerShellGalleryVersion','Get-ProjectEnvironment','Get-ProjectRoot','Get-ReleaseType','Get-SourcePath','Get-TestEnvironment','Initialize-TestEnvironment','New-GitHubRelease','Remove-BuildEnvironment')
+FunctionsToExport = @()
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = '*'
