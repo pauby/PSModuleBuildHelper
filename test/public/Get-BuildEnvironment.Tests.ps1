@@ -52,8 +52,29 @@ Describe 'Function Testing - Get-BuildEnvironment' {
                 @{  key      = 'ReleaseType'
                     expected = 'None'
                 },
-                @{  key      = 'BuildArtifactPath'
-                    expected = "$TestDrive\$moduleName\$moduleName-$moduleVersion.zip"
+                @{  key      = 'PSGalleryApiKey'
+                    expected = $psGalleryApiKey
+                },
+                @{  key      = 'RepoBranch'
+                    expected = ''
+                },
+                @{  key      = 'RepoLastCommitHash'
+                    expected = ''
+                },
+                @{  key      = 'RepoLastCommitMessage'
+                    expected = ''
+                },
+                @{  key      = 'GitHubUsername'
+                    expected = $gitHubUsername
+                },
+                @{  key      = 'GitHubApiKey'
+                    expected = $gitHubApiKey
+                },
+                @{  key      = 'SourceManifestPath'
+                    expected = "$TestDrive\$moduleName\$sourcePath\$modulename.psd1"
+                },
+                @{  key      = 'SourceModulePath'
+                    expected = "$TestDrive\$moduleName\$sourcePath\$modulename.psm1"
                 },
                 @{  key      = 'BuildPath'
                     expected = "$TestDrive\$moduleName\buildoutput\$moduleVersion"
@@ -63,7 +84,16 @@ Describe 'Function Testing - Get-BuildEnvironment' {
                 },
                 @{  key      = 'BuildModulePath'
                     expected = "$TestDrive\$moduleName\buildoutput\$moduleVersion\$modulename.psm1"
-                }                
+                },
+                @{  key      = 'PSSASettingsPath'
+                    expected = "$TestDrive\$moduleName\Tests\$pssaSettings"
+                },
+                @{  key      = 'PSSACustomRulesPath'
+                    expected = "$TestDrive\$moduleName\Tests\$pssaCustomRulesPath"
+                },
+                @{  key      = 'BuildArtifactPath'
+                    expected = "$TestDrive\$moduleName\$moduleName-$moduleVersion.zip"
+                }
             )
 
             Set-Location -Path "TestDrive:\$moduleName"
