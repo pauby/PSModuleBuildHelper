@@ -36,7 +36,7 @@ function Get-BuildEnvironment {
         # the release type will be deteremined from the commit message.
         [String]
         [ValidateSet( 'Major', 'Minor', 'Build', 'None', 'Unknown' )]
-        $ReleaseType = (Get-ReleaseType -CommitMessage Get-GitLastCommitMessage),
+        $ReleaseType,
 
         # The GitHub Username that has write access to this repo.
         [string]
@@ -62,6 +62,10 @@ function Get-BuildEnvironment {
         $PSSACustomRulesFolderName = 'CustomAnalyzerRules'
     )
 
+    if (-not $PSBoundParameters.ContainsKey('Verbose')) {
+        $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference')
+    }
+
     $buildInfo = Get-ProjectEnvironment 
 
     @(  'LatestVersion', 'ReleaseVersion', 'ReleaseType', 'PSGalleryApiKey', 'RepoBranch', 'RepoLastCommitHash', `
@@ -73,7 +77,13 @@ function Get-BuildEnvironment {
     }
 
     # ReleaseType & PSGallery API Key
-    $buildInfo.ReleaseType = $ReleaseType 
+    if ([string]::IsNullOrEmpty($ReleaseType) -or $ReleaseType -eq 'Unknown') {
+        Write-Verbose "Determining 'ReleaseType' from the last commit message."
+        $buildInfo.ReleaseType = Get-ReleaseType -CommitMessage (Get-GitLastCommitMessage)
+    } 
+    else {
+       $buildInfo.ReleaseType = $ReleaseType
+    }
     $buildInfo.PSGalleryApiKey = $PSGalleryApiKey
 
     # Git
@@ -95,7 +105,7 @@ function Get-BuildEnvironment {
     # Versions
     if (Test-Path -Path $buildInfo.SourceManifestPath) {
         $buildInfo.LatestVersion = Get-ManifestVersion -Path $buildInfo.SourceManifestPath
-        $buildInfo.ReleaseVersion = Get-NextReleaseVersion -LatestVersion $buildInfo.LatestVersion -ReleaseType $ReleaseType
+        $buildInfo.ReleaseVersion = Get-NextReleaseVersion -LatestVersion $buildInfo.LatestVersion -ReleaseType $buildInfo.ReleaseType
     }
     else {
         throw "Source manifest '$($buildInfo.SourceManifestPath)' does not exist."
