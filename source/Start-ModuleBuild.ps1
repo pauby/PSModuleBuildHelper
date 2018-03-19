@@ -67,7 +67,7 @@ PushManifestBackToGitHub,
 
 Enter-Build {
     # Github links require >= tls 1.2
-#    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
     $script:BuildInfo = Get-BuildEnvironment -ReleaseType $ReleaseType `
         -GitHubUsername $GitHubUsername -GitHubApiKey $GitHubApiKey -PSGalleryApiKey $PSGalleryApiKey
@@ -607,11 +607,9 @@ task PushManifestBackToGitHub {
 
 task CreateBuildArtifact {
     # create the build artifact
-    $artifactName = "$($BuildInfo.ModuleName)-$($BuildInfo.ReleaseVersion).zip"
-    $artifactPath = Join-Path -Path $BuildInfo.ProjectRootPath -ChildPath $artifactName
-    Remove-Item -Path $artifactPath -ErrorAction SilentlyContinue
+    Remove-Item -Path $BuildInfo.BuildArtifactPath -ErrorAction SilentlyContinue
 
-    $sourcePath = Join-Path -Path $BuildInfo.ReleaseVersion -ChildPath '*'
+    $sourcePath = Join-Path -Path $BuildInfo.BuildPath -ChildPath '*'
     Write-Verbose "Creating ZIP archive '$($BuildInfo.BuildArtifactPath)' containing '$sourcePath'."
     Compress-Archive -Path $sourcePath -DestinationPath $BuildInfo.BuildArtifactPath
 }
