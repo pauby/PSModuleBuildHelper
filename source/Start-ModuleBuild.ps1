@@ -95,15 +95,14 @@ Enter-Build {
 # Synopsis: Remove build folder
 task Clean CleanImportedModule, {
     try {
-        Remove-BuildEnvironment -BuildInfo $BuildInfo
-
-        $BuildInfo.BuildPath, $BuildInfo.OutputPath | ForEach-Object {
-            Write-Verbose "Creating folder $_" 
-            $null = New-Item $_ -ItemType Directory -Force
-        }
+        $BuildInfo.BuildPath, $BuildInfo.OutputPath | ForEachObject { 
+        Write-Verbose "Removing folder $_" 
+        Remove-Item -Path -Recurse -Force -ErrorAction SilentlyContinue | Out-Null
+        Write-Verbose "Creating folder $_" 
+        New-Item $_ -ItemType Directory -Force | Out-Null
     }
     catch {
-        throw
+        throw $_
     }
 }
 
@@ -116,7 +115,29 @@ task CleanImportedModule {
 }
 
 task BleachClean {
-    Remove-BuildEnvironment
+    try {
+        $rootBuildPath = Split-Path -Path $BuildInfo.BuildPath -Parent
+        if ($rootBuildPath -eq $BuildInfo.ProjectRootPath) {
+            throw "Something has gone wrong as the parent of '$($BuildInfo.BuildPath)' is the project root path '$($BuildInfo.ProjectRootPath)'."
+        }
+
+        if (Test-Path $BuildInfo.OutputPath) {
+            Write-Verbose "Removing 'Output' folder $($BuildInfo.OutputPath)"
+            Remove-Item $BuildInfo.OutputPath -Recurse -Force
+        }
+
+        $rootBuildPath, $BuildInfo.OutputPath | ForEachObject { 
+            Remove-Item -Path -Recurse -Force
+        }
+
+        $BuildInfo.BuildPath, $BuildInfo.OutputPath | ForEach-Object {
+            Write-Verbose "Creating folder $_" 
+            $null = New-Item $_ -ItemType Directory -Force
+        }
+    }
+    catch {
+        throw $_
+    }
 }
 
 # https://github.com/indented-automation/Indented.Build
