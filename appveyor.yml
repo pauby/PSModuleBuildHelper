@@ -1,0 +1,74 @@
+# See http://www.appveyor.com/docs/appveyor-yml for more options
+
+os: WMF 5
+
+version: 1.1.0.{build}
+max_jobs: 1
+
+environment:
+  PSGALLERY_API_KEY:
+#    secure: TO/Slq79myoBRfUTivNSeTkCJAvK5RPE2K52pjR9djE=
+    secure: TO/Slq79myoBRfUTivNSeScz0nRWFlFp0JMiImdmHVZLsSa349qCi98nm29e6uGC
+
+  GITHUB_API_KEY:
+    secure: jmTiAdpCVvSrW0a0kDpC+ucDk4WSnSiNJhpVbsE+FKx1ZwzB189RUmFvnbgkBGBw
+
+  GITHUB_USERNAME:
+    secure: WbMc18DNWPRELk0QTnab0Q==
+
+  appveyor_rdp_password:
+    secure: pky5Pop1AV7LIiB4zFOkhQ==
+
+  notify_email:
+    secure: xxzrryH1TErXFSjxmYszGA==
+
+branches:
+  only:
+  - master
+
+#skip_commits:
+#  message: /updated? readme.*/
+
+only_commits:
+  message: /^Rebuild|^Release/
+
+build: false # disable MSBuild
+
+init:
+#  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+
+install:
+  - git --version
+  - choco --version
+
+  - ps: |
+      Set-Location $env:APPVEYOR_BUILD_FOLDER
+      .\build\Initialize-Build.ps1
+      Set-Location '..\'
+      [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+      Invoke-WebRequest -Uri https://github.com/pauby/PSModuleBuildHelper/releases/download/v0.0.1/psmodulebuildhelper-0.0.1.zip -OutFile psmodulebuildhelper.zip -UseBasicParsing
+      Expand-Archive psmodulebuildhelper.zip
+      $path = Join-Path -Path (Get-Location).Path -ChildPath 'PSModuleBuildHelper'
+      Import-Module -Name (Join-Path -Path $path -ChildPath 'PSModuleBuildHelper.psd1')
+      Set-Location $env:APPVEYOR_BUILD_FOLDER
+      git config --global credential.helper store
+      Add-Content "$env:USERPROFILE\.git-credentials" "https://$($env:GITHUB_API_KEY):x-oauth-basic@github.com`n"
+
+build_script:
+  - ps: |
+      $Verbose = @{}
+      $tasks = 'Build', 'Test'
+      switch -Regex ($env:APPVEYOR_REPO_COMMIT_MESSAGE) {
+          '!verbose' {
+              $Verbose = @{ Verbose = $true }
+          }
+          '!publish' {
+              git checkout master -q
+              $tasks += 'PublishAll'
+          }
+      }
+
+      Invoke-Build $tasks @Verbose
+
+on_finish:
+#  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
