@@ -51,7 +51,7 @@ Describe 'Function Testing - Hide-SensitiveData' {
                 Sister          = 'Leia'
             }
 
-            $result = Hide-SensitiveData -InputObject $test
+            $result = Hide-SensitiveData -InputObject $test -Mask '*****'
             Compare-Object -ReferenceObject $expected -DifferenceObject $result `
                 -Property Name, JediPassword, LoginKey, AuthToken, Sister | Should -Be $null
         } 
@@ -72,7 +72,7 @@ Describe 'Function Testing - Hide-SensitiveData' {
                 Sister       = '*****'
             }
 
-            $result = $test | Hide-SensitiveData -Keyword @('sis', 'name')
+            $result = $test | Hide-SensitiveData -Keyword @('sis', 'name') -Mask '*****'
             Compare-Object -ReferenceObject $expected -DifferenceObject $result `
                 -Property Name, JediPassword, LoginKey, AuthToken, Sister | Should -Be $null
         } 
