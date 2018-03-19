@@ -47,7 +47,6 @@ Describe 'Function Testing - Get-ReleaseType' {
 
             $result = Get-ReleaseType -CommitMessage $message
             $result | Should -Be $expected
-            $result | Should -BeOfType [Enum]
         }
     }
 

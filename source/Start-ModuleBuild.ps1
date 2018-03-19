@@ -12,8 +12,8 @@
 
 [CmdletBinding()]
 Param (
-    [ReleaseType]
-    $ReleaseType = [ReleaseType]::Unknown,
+    [String]
+    $ReleaseType = 'Unknown',
 
     [string]
     $GitHubUsername = $env:GITHUB_USERNAME,

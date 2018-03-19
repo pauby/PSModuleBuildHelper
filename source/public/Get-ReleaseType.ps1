@@ -12,9 +12,9 @@ function Get-ReleaseType {
     .EXAMPLE
         Get-ReleaseType -CommitMessage ''
 
-        Gets' the release type ofr an empty commit message - this will be [ReleaseType]::None
+        Gets' the release type ofr an empty commit message - this will be 'None'
     .OUTPUTS
-        [ReleaseType]
+        [String]
     .NOTES
         Author  : Paul Broadwith (https://github.com/pauby)
         History : 1.0 - 15/03/18 - Initial release
@@ -25,16 +25,16 @@ function Get-ReleaseType {
     .LINK
         Get-GitBranchName
 #>
-    [OutputType([ReleaseType])]
+    [OutputType([String])]
     [CmdletBinding()]
     Param (
         # The commit message to be used to determine the release type.
         # The message should start with:
         #
-        #  - 'Major release'   : [ReleaseType]::Major release type
-        #  - 'Minor release'   : [ReleaseType]::Minor release type
-        #  - 'Release'         : [ReleaseType]::Build release type
-        #  - None of the above : [ReleaseType]::None release type
+        #  - 'Major release'   : 'Major' release type
+        #  - 'Minor release'   : 'Minor' release type
+        #  - 'Release'         : 'Build' release type
+        #  - None of the above : 'None' release type
         [Parameter(Mandatory)]
         [AllowEmptyString()]
         [string]$CommitMessage
@@ -43,19 +43,19 @@ function Get-ReleaseType {
     switch -Regex ($CommitMessage) {
         '^Major release' {
             Write-Verbose "Commit message contains 'Major release'. ReleaseType is 'Major'."
-            [ReleaseType]::Major
+            'Major'
         }
         '^Minor release' {
             Write-Verbose "Commit message starts with 'Minor release'. Release type is 'Minor'."
-            [ReleaseType]::Minor
+            'Minor'
         }
         '^Release' {
             Write-Verbose "Commit message contains 'Release'. Release type is 'Build'"
-            [ReleaseType]::Build
+            'Build'
         }
         default {
             Write-Verbose "Commit message does not contain any release types. Release type is 'None'"
-            [ReleaseType]::None
+            'None'
         }
     }
 }

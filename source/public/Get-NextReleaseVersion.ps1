@@ -26,15 +26,17 @@ function Get-NextReleaseVersion {
     Param (
         # The latest releaase version.
         [Parameter(Mandatory)]
-        [Version]$LatestVersion,
+        [Version]
+        $LatestVersion,
 
         # The type of this release.
         [Parameter(Mandatory)]
-        [ReleaseType]$ReleaseType
+        [String]
+        $ReleaseType
     )
 
-    Write-Verbose "Release type is $([ReleaseType]::$ReleaseType)."
-    $version = switch ([ReleaseType]::$ReleaseType) {
+    Write-Verbose "Release type is $($ReleaseType)."
+    $version = switch ($ReleaseType) {
         Major {
             Write-Verbose "Incrementing major version number."
             New-Object Version(($LatestVersion.Major + 1), 0, 0)
