@@ -93,7 +93,7 @@ Enter-Build {
 }
 
 # Synopsis: Remove build folder
-task Clean CleanImportedModule, {
+task Clean {
     try {
         $BuildInfo.BuildPath, $BuildInfo.OutputPath | ForEach-Object { 
             Write-Verbose "Removing folder $_" 
