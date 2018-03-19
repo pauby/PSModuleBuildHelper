@@ -75,6 +75,7 @@ Enter-Build {
 
     if ($VerbosePreference -ne 'SilentlyContinue') {
         $lines
+        Write-Host "Build Started: $(Get-Date)"
         Write-Host 'Build System Environment Variables: ============================='
         Get-BuildSystemEnvironment | Convert-SensitiveData
 
