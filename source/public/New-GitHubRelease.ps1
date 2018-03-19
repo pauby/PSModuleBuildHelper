@@ -29,6 +29,7 @@ function New-GithubRelease {
 
         # The Commit ID corresponding to this release.
         [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
         [string]$CommitID,
 
         # Release notes for this release.
@@ -41,19 +42,22 @@ function New-GithubRelease {
 
         # The GitHub Username to use for authentication.
         [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
         [string]
         $GitHubUsername,
-
-        # Which GitHub repository this release is for.
-        [Parameter(Mandatory)]
-        [string]
-        $GitHubRepository,
 
         # The Github API key used for authentication. 
         # See (https://github.com/blog/1509-personal-api-tokens)
         [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
         [string]
         $GitHubApiKey,
+
+        # Which GitHub repository this release is for.
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string]
+        $GitHubRepository,
 
         # Marks this release as a draft.
         [Switch]
@@ -85,10 +89,11 @@ function New-GithubRelease {
         Method      = 'POST'
         Headers     = @{
             Authorization = 'Basic ' + [Convert]::ToBase64String(
-                [Text.Encoding]::ASCII.GetBytes($GitHubApiKey + ":x-oauth-basic"));
+                [Text.Encoding]::ASCII.GetBytes($GitHubApiKey + ":x-oauth-basic"))
         }
         ContentType = 'application/json'
         Body        = (ConvertTo-Json $releaseData -Compress)
+        UseBasicParsing = $true
     }
 
     # force use of TLS 1.2
@@ -96,7 +101,12 @@ function New-GithubRelease {
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
     Write-Verbose 'Creating tagged Github release.'
-    $result = Invoke-RestMethod @releaseParams 
+    try {
+        $result = Invoke-RestMethod @releaseParams -OutVariable $errorMsg
+    }
+    catch {
+        throw "Could not create tagged GitHub release - '$_'"
+    }
     $uploadUri = $result | Select-Object -ExpandProperty upload_url
     $uploadUri = $uploadUri -replace '\{\?name.*\}', "?name=$artifact"
 
