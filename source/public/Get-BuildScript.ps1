@@ -24,7 +24,7 @@ function Get-BuildScript {
     Param()
 
     $rootPath = $PSScriptRoot
-    if ((Split-Path -Path $rootPath -Leaf) -eq 'source') {
+    if ((Split-Path -Path $rootPath -Leaf) -eq 'public') {
         $rootPath = Split-Path -Path $PSScriptRoot -Parent
     }
 
