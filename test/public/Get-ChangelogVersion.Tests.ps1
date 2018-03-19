@@ -26,8 +26,16 @@ Describe 'Function Testing - Get-ChangelogVersion' {
     }
 
     Context 'Output' {
+        $changelogPath = 'TestDrive:\changelog.md'
+
+        It "should pass if the version is '0.0.0' when nothing matched in the changelog" {
+            Set-Content -Path $changelogPath -Value ''
+            $result = Get-ChangelogVersion -Path $changelogPath 
+            $result | Should Be '0.0.0'
+            $result | Should -BeOfType [Version]
+        }
+
         It 'should return the correct version number for a test changelog' {
-            $changelogPath = 'TestDrive:\changelog.md'
 @"
 # Changelog
 
