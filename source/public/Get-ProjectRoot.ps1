@@ -26,5 +26,11 @@ function Get-ProjectRoot {
     [OutputType([String])]
     Param ()
 
-    (Get-Item (git rev-parse --show-toplevel)).FullName
+    $path = git rev-parse --show-toplevel
+    if ($null -eq $path) {
+        throw 'Not a git repository - cannot provide project root'
+    }
+    else {
+        (Get-Item $path).FullName
+    }
 }
