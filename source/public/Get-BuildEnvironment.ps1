@@ -28,14 +28,14 @@ function Get-BuildEnvironment {
     .LINK
         Get-TestEnvironment
     #>
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseConsistentWhitespace", "", Justification = "Causes issue with the large hash table")]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAlignAssignmentStatement", "", Justification = "Causes issue with the large hash table")]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingEmptyCatchBlock", "", Justification = "Easiest way of jumping out of the block when one fails")]
     [OutputType([PSObject])]
     [CmdletBinding()]
     Param (
         # The type of release we should be building. If this is 'Unknown' then
         # the release type will be deteremined from the commit message.
-        [ReleaseType]
+        [String]
+        [ValidateSet( 'Major', 'Minor', 'Build', 'None', 'Unknown' )]
         $ReleaseType = (Get-ReleaseType -CommitMessage Get-GitLastCommitMessage),
 
         # The GitHub Username that has write access to this repo.
@@ -64,77 +64,41 @@ function Get-BuildEnvironment {
 
     $buildInfo = Get-ProjectEnvironment 
 
-    # Repo
+    @(  'LatestVersion', 'ReleaseVersion', 'ReleaseType', 'PSGalleryApiKey', 'RepoBranch', 'RepoLastCommitHash', `
+        'RepoLastCommitMessage', 'GitHubUsername', 'GitHubApiKey', 'SourceManifestPath', 'SourceModulePath', `
+        'BuildPath', 'BuildManifestPath', 'BuildModulePath', 'PSSASettingsPath', 'PSSACustomRulesPath', `
+        'BuildArtifactPath' 
+    ) | ForEach-Object {
+        $buildInfo | Add-Member -MemberType NoteProperty -Name $_ -Value ''
+    }
+
+    # ReleaseType & PSGallery API Key
+    $buildInfo.ReleaseType = $ReleaseType 
+    $buildInfo.PSGalleryApiKey = $PSGalleryApiKey
+
+    # Git
+    $buildInfo.GitHubUsername = $GitHubUsername
+    $buildInfo.GitHubApiKey = $GitHubApiKey
+
     try {
-        $repoBranch = Get-GitBranchName
-        $repoLastCommitHash = Get-GitLastCommitHash
-        $repoLastCommitMessage = Get-GitLastCommitMessage
+        $buildInfo.RepoBranch = Get-GitBranchName -ErrorAction SilentlyContinue
+        $buildInfo.RepoLastCommitHash = Get-GitLastCommitHash -ErrorAction SilentlyContinue
+        $buildInfo.RepoLastCommitMessage = Get-GitLastCommitMessage -ErrorAction SilentlyContinue
     }
     catch {
-        Write-Warning 'Cannot determine the current git branch or there are no previous commits.'
     }
 
-    @(  @{  name    = 'LatestVersion'
-            value   = ''
-        },
-        @{  name    = 'ReleaseVersion'
-            value   = ''
-        },
-        @{  name    = 'ReleaseType'
-            value   = $ReleaseType
-        },
-        @{  name    = 'PSGalleryApiKey'
-            value   = $PSGalleryApiKey
-        },
-        @{  name    = 'RepoBranch'
-            value   = $repoBranch
-        },
-        @{  name    = 'RepoLastCommitHash'
-            value   = $repoLastCommitHash
-        },
-        @{  name    = 'RepoLastCommitMessage'
-            value   = $repoLastCommitMessage
-        },
-        @{  name    = 'GitHubUsername'
-            value   = $GitHubUsername
-        },
-        @{  name    = 'GitHubApiKey'
-            value   = $GitHubApiKey
-        },
-        @{  name    = 'SourceManifestPath'
-            value   = (Join-Path -Path $buildInfo.SourcePath -ChildPath "$($buildInfo.ModuleName).psd1")
-        }, 
-        @{  name    = 'SourceModulePath'
-            value   = (Join-Path -Path $buildInfo.SourcePath -ChildPath "$($buildInfo.ModuleName).psm1")
-        },
-        @{  name    = 'BuildPath'
-            value   = ''
-        },
-        @{  name    = 'BuildManifestPath'
-            value   = ''
-        },
-        @{  name    = 'BuildModulePath'
-            value   = ''
-        }
-        @{  name    = 'PSSASettingsPath'
-            value   = ''
-        },
-        @{  name    = 'PSSACustomRulesPath'
-            value   = ''
-        }
-        @{  name    = 'BuildArtifactPath'
-            value   = ''
-        }
-    ) | ForEach-Object {
-        $buildInfo | Add-Member -MemberType NoteProperty -Name $_.Name -Value $_.Value
-    }
+    # Source Paths
+    $buildInfo.SourceManifestPath = Join-Path -Path $buildInfo.SourcePath -ChildPath "$($buildInfo.ModuleName).psd1"
+    $buildInfo.SourceModulePath = Join-Path -Path $buildInfo.SourcePath -ChildPath "$($buildInfo.ModuleName).psm1"
 
     # Versions
-    $buildInfo.LatestVersion = Get-ManifestVersion -Path $buildInfo.SourceManifestPath
-    $buildInfo.ReleaseVersion = Get-NextReleaseVersion -LatestVersion $buildInfo.LatestVersion -ReleaseType $ReleaseType
-    $psGalleryVersion = Get-PowerShellGalleryVersion -Name $buildInfo.ModuleName
-    if ([version]$psGalleryVersion -gt [version]$buildInfo.ReleaseVersion) {
-        Write-Warning "The version of this module in the PowerShell Gallery ($psGalleryVersion) is greater than the release version of this build ($($buildInfo.ReleaseVersion))."
+    if (Test-Path -Path $buildInfo.SourceManifestPath) {
+        $buildInfo.LatestVersion = Get-ManifestVersion -Path $buildInfo.SourceManifestPath
+        $buildInfo.ReleaseVersion = Get-NextReleaseVersion -LatestVersion $buildInfo.LatestVersion -ReleaseType $ReleaseType
+    }
+    else {
+        throw "Source manifest '$($buildInfo.SourceManifestPath)' does not exist."
     }
 
     # Build paths
@@ -146,7 +110,8 @@ function Get-BuildEnvironment {
     # Build Abstract
     $buildInfo.BuildArtifactPath = Join-Path -Path $buildInfo.ProjectRootPath -ChildPath "$($buildInfo.ModuleName)-$($buildInfo.ReleaseVersion).zip"
 
-    # PSSAct-Object -First 1
+    # PSSA
+    $settingsPath = Get-ChildItem -Path $PSSASettingsName -File -Recurse | Select-Object -First 1
     if ($settingsPath) {
         $buildInfo.PSSASettingsPath = $settingsPath.FullName
     }
