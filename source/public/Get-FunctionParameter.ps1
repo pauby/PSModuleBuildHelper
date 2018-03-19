@@ -40,6 +40,10 @@ function Get-FunctionParameter {
                 'OutVariable', 'OutBuffer', 'PipelineVariable' )
     )
 
+    if (-not $PSBoundParameters.ContainsKey('Verbose')) {
+        $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference')
+    }
+
     try {
         (Get-Item -Path "Function:\$Name").Parameters.GetEnumerator() | Where-Object { $Exclude -notcontains $_.key}
     }

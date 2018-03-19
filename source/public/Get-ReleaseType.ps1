@@ -40,6 +40,11 @@ function Get-ReleaseType {
         [string]$CommitMessage
     )
 
+    if (-not $PSBoundParameters.ContainsKey('Verbose')) {
+        $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference')
+    }
+
+    Write-Verbose "Commit message: $CommitMessage"
     switch -Regex ($CommitMessage) {
         '^Major release' {
             Write-Verbose "Commit message contains 'Major release'. ReleaseType is 'Major'."

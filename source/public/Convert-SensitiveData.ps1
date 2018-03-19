@@ -42,7 +42,11 @@ function Convert-SensitiveData {
         $Mask = '*****'
     )
 
-    Begin {}
+    Begin {
+        if (-not $PSBoundParameters.ContainsKey('Verbose')) {
+            $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference')
+        }
+    }
 
     Process {
         # filter the environment secret vars

@@ -25,6 +25,10 @@ function Initialize-TestEnvironment {
     #>
     [CmdletBinding()]
     Param()
+
+    if (-not $PSBoundParameters.ContainsKey('Verbose')) {
+        $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference')
+    }
     
     $testInfo = Get-TestEnvironment
 

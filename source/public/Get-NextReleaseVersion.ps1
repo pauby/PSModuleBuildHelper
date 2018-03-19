@@ -35,6 +35,10 @@ function Get-NextReleaseVersion {
         $ReleaseType
     )
 
+    if (-not $PSBoundParameters.ContainsKey('Verbose')) {
+        $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference')
+    }
+
     Write-Verbose "Release type is $($ReleaseType)."
     $version = switch ($ReleaseType) {
         Major {

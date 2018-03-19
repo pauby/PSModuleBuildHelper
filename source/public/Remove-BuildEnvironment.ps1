@@ -22,6 +22,10 @@ function Remove-BuildEnvironment {
         [PSObject]$BuildInfo
     )
 
+    if (-not $PSBoundParameters.ContainsKey('Verbose')) {
+        $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference')
+    }
+
     if ($PSCmdlet.ShouldProcess('ShouldProcess?')) {
         try {
             $rootBuildPath = Split-Path -Path $BuildInfo.BuildPath -Parent

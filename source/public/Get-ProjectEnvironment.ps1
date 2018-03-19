@@ -29,6 +29,10 @@ function Get-ProjectEnvironment {
     [CmdletBinding()]
     Param ()
 
+    if (-not $PSBoundParameters.ContainsKey('Verbose')) {
+        $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference')
+    }
+
     $projectRoot = Get-ProjectRoot
     $sourcePath = Get-SourcePath -ProjectRoot $projectRoot
 

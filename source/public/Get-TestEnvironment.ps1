@@ -50,6 +50,10 @@ function Get-TestEnvironment {
         [string]
         $PSSACustomRulesFolderName = 'CustomAnalyzerRules'
     )
+
+    if (-not $PSBoundParameters.ContainsKey('Verbose')) {
+        $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference')
+    }
     
     $testInfo = Get-ProjectEnvironment
 

@@ -27,6 +27,10 @@ function Get-ManifestVersion {
         [string]$Path
     )
 
+    if (-not $PSBoundParameters.ContainsKey('Verbose')) {
+        $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference')
+    }
+
     # get the version from the manifest
     try {
         Write-Verbose "Getting the version from the manifest at '$Path'."

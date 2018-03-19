@@ -31,6 +31,10 @@ function Get-PowerShellGalleryVersion {
         $Name
     )
 
+    if (-not $PSBoundParameters.ContainsKey('Verbose')) {
+        $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference')
+    }
+
     # get the version from the PowerShell Gallery
     try {
         Write-Verbose "Getting the latest version of '$Name' from the PowerShell Gallery."
