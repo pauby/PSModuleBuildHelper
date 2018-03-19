@@ -47,8 +47,8 @@ install:
       Set-Location '..\'
       [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
       Invoke-WebRequest -Uri https://github.com/pauby/PSModuleBuildHelper/releases/download/v0.0.1/psmodulebuildhelper-0.0.1.zip -OutFile psmodulebuildhelper.zip -UseBasicParsing
-      Expand-Archive psmodulebuildhelper.zip
-      $path = Join-Path -Path (Get-Location).Path -ChildPath 'PSModuleBuildHelper'
+      Expand-Archive -Path psmodulebuildhelper.zip -DestinationPath 'psmbh'
+      $path = Join-Path -Path (Get-Location).Path -ChildPath 'psmbh'
       Import-Module -Name (Join-Path -Path $path -ChildPath 'PSModuleBuildHelper.psd1')
       Set-Location $env:APPVEYOR_BUILD_FOLDER
       git config --global credential.helper store
