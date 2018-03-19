@@ -1,5 +1,5 @@
 #.ExternalHelp PSModuleBuildHelper-help.xml
-function Convert-SensitiveData {
+function Hide-SensitiveData {
     <#
     .SYNOPSIS
         Searches the object property names for keywords and masks their value if it matches.
@@ -10,7 +10,7 @@ function Convert-SensitiveData {
         replaced.
     .EXAMPLE
         $test = New-Object -TypeName PSObject -Property @{ api = 'abcd', name = 'Luke' }
-        $test | Convert-SensitiveData
+        $test | Hide-SensitiveData
 
         Returns the object with the value of 'api' as '*****'
     .OUTPUTS
@@ -39,19 +39,26 @@ function Convert-SensitiveData {
 
         # The mask that will be used to replace any matching keyword values.
         [String]
-        $Mask = '*****'
+        $Mask = '[protected]'
     )
 
-    Begin {
+    begin {
         if (-not $PSBoundParameters.ContainsKey('Verbose')) {
             $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference')
         }
     }
 
-    Process {
+    process {
+        # objects are passed by reference so any changes to it are made to the original
+        # clone the input object so we don't change it
+        $copyObj = New-Object -TypeName PsObject
+        $InputObject.PSObject.Properties | ForEach-Object {
+            $copyObj | Add-Member -MemberType $_.MemberType -Name $_.Name -Value $_.Value
+        }
+
         # filter the environment secret vars
         # if the environment variable is empty then don't mask it
-        ForEach ($obj in $InputObject.PSObject.Properties) {
+        ForEach ($obj in $copyObj.PSObject.Properties) {
             Write-Debug "Checking '$($obj.Name)' for a keyword match."
             ForEach ($k in $Keyword) {
                 # does the name match the secret and it's not empty
@@ -62,9 +69,9 @@ function Convert-SensitiveData {
                 }
             }
         }
+    }
 
-        $InputObject
-   }
-
-    End {}
+    end {
+        $copyObj
+    }
 }

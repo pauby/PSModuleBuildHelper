@@ -77,7 +77,7 @@ Enter-Build {
         $lines
         Write-Host "Build Started: $(Get-Date)"
         Write-Host 'Build System Environment Variables: ============================='
-        Get-BuildSystemEnvironment | Convert-SensitiveData
+        Get-BuildSystemEnvironment | Hide-SensitiveData
 
         Write-Host 'Operating System: ==============================================='
         Get-BuildOperatingSystemDetail | Format-List
@@ -86,7 +86,7 @@ Enter-Build {
         Get-BuildPowerShellDetail | Format-List
 
         Write-Host 'Build Environment: =============================================='
-        $script:BuildInfo | Convert-SensitiveData
+        $script:BuildInfo | Hide-SensitiveData
         $lines
     }
     "`n"

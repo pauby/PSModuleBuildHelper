@@ -10,7 +10,7 @@ else {
         -ChildPath 'psmodulebuildhelper.psd1') -Force
 }
 
-Describe 'Function Testing - Convert-SensitiveData' {
+Describe 'Function Testing - Hide-SensitiveData' {
     Context 'Input' {
         # if this is the first test being run after module import then it
         # may fail the fiorst time it is run - it looks like it may be too
@@ -18,19 +18,19 @@ Describe 'Function Testing - Convert-SensitiveData' {
         # solution would be to move this so it is not the first test.
         It 'should be true if mandatory parameters have not been changed' {
             $mandatoryParams = @( 'InputObject' )
-            $result = Get-FunctionParameter -Name 'Convert-SensitiveData' | Where-Object { $_.Value.Attributes.Mandatory -eq $true }
+            $result = Get-FunctionParameter -Name 'Hide-SensitiveData' | Where-Object { $_.Value.Attributes.Mandatory -eq $true }
             
             @($result).count | Should -Be @($mandatoryParams).Count
             [bool]($result | ForEach-Object { $mandatoryParams -contains $_.key }) | Should -Be $true  
         }
 
         It 'should throw for a $null or empty input object' {
-            { Convert-SensitiveData -InputObject $null } | Should throw
-            { $null | Convert-SensitiveData -ErrorAction Stop } | Should throw
+            { Hide-SensitiveData -InputObject $null } | Should throw
+            { $null | Hide-SensitiveData -ErrorAction Stop } | Should throw
 
             $emptyObj = New-Object -TypeName PSObject
-            { Convert-SensitiveData -InputObject $emptyObj } | Should throw
-            { $emptyObj | Convert-SensitiveData -ErrorAction Stop } | Should throw
+            { Hide-SensitiveData -InputObject $emptyObj } | Should throw
+            { $emptyObj | Hide-SensitiveData -ErrorAction Stop } | Should throw
         }
     }
 
@@ -51,7 +51,7 @@ Describe 'Function Testing - Convert-SensitiveData' {
                 Sister          = 'Leia'
             }
 
-            $result = Convert-SensitiveData -InputObject $test
+            $result = Hide-SensitiveData -InputObject $test
             Compare-Object -ReferenceObject $expected -DifferenceObject $result `
                 -Property Name, JediPassword, LoginKey, AuthToken, Sister | Should -Be $null
         } 
@@ -72,7 +72,7 @@ Describe 'Function Testing - Convert-SensitiveData' {
                 Sister       = '*****'
             }
 
-            $result = $test | Convert-SensitiveData -Keyword @('sis', 'name')
+            $result = $test | Hide-SensitiveData -Keyword @('sis', 'name')
             Compare-Object -ReferenceObject $expected -DifferenceObject $result `
                 -Property Name, JediPassword, LoginKey, AuthToken, Sister | Should -Be $null
         } 
