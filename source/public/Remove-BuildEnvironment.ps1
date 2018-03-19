@@ -24,9 +24,15 @@ function Remove-BuildEnvironment {
 
     if ($PSCmdlet.ShouldProcess('ShouldProcess?')) {
         try {
-            if (Test-Path $BuildInfo.BuildPath) {
-                Write-Verbose "Removing 'Build' folder $($BuildInfo.BuildPath)"
-                Remove-Item $BuildInfo.BuildPath -Recurse -Force
+            $rootBuildPath = Split-Path -Path $BuildInfo.BuildPath -Parent
+            if (Test-Path $rootBuildPath) {
+                if ($rootBuildPath -ne $BuildInfo.ProjectRootPath) {
+                    Write-Verbose "Removing 'BuildOutput' folder $($BuildInfo.BuildPath)"
+                    Remove-Item $rootBuildPath -Recurse -Force
+                }
+                else {
+                    throw "Something has gone wrong as the parent of '$($BuildInfo.BuildPath)' is the project root path '$($BuildInfo.ProjectRootPath)'."
+                }
             }
 
             if (Test-Path $BuildInfo.OutputPath) {
