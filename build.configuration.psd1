@@ -23,6 +23,6 @@
     )
 
     Testing = @{
-        CodeCoverage = 0.5
+        CodeCoverageThreshold = 0.7
     }
 }
