@@ -2,6 +2,10 @@
 
 Contains functions to help you build, maintain and manage your modules.
 
+# Requirements
+
+PowerShell 5.0.
+
 # Module File & Folder Structure
 
 The module function expect to find your file and folder structure as follows:
@@ -46,6 +50,10 @@ Where <PROJECTROOT> is the root folder of your project and is also the module na
 * (6) - This build script is required and can simply dot inlcude the main build script but this is where we start;
 * (7) - If you have comment based help in your functions then they will be used to create Markdown help files in this folder;
 
+# TODO
+
+* [ ] - Add [Coveralls](https://coveralls.io) support;
+* [ ] - Capture the output from choco in the Install-ChocolateyPackage function - stops cluttering the screen;
 
 # Contributing
 
