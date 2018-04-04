@@ -63,10 +63,9 @@ function Get-BuildEnvironment {
         $PSSACustomRulesFolderName = 'CustomAnalyzerRules',
 
         # The threshold that test code coverage must meet expressed between 0.01 to 1.00.
-        [Parameter(Mandatory)]
         [ValidateRange(0.01, 1.00)]
-        [int]
-        $CodeCoverageThreshold
+        [single]
+        $CodeCoverageThreshold = 0.8
     )
 
     if (-not $PSBoundParameters.ContainsKey('Verbose')) {
