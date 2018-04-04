@@ -32,6 +32,11 @@ $TestFile = "TestResults_PS$PSVersion`_$TimeStamp.xml"
 $lines = '----------------------------------------------------------------------'
 $CodeCoverageThreshold = 0.8 # 80%
 
+$script:BuildDefault = @{
+    BuildConfigurationFilename = 'build.configuration.psd1'
+    $CodeCoverageThreshold     = 0.8 # 80%
+}
+
 if($ENV:BHCommitMessage -match "!verbose") {
     #$global:VerbosePreference = 'Continue'
     $global:VerbosePreference = [System.Management.Automation.ActionPreference]::Continue
@@ -69,8 +74,26 @@ Enter-Build {
     # Github links require >= tls 1.2
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
+    # Read the configuration file if it exists
+    $buildConfigPath = Get-ChildItem -Path $script:BuildDefault.BuildConfigurationFilename -Recurse | Select-Object -First 1
+    if ($buildConfigPath) {
+        $script:BuildConfig = Import-PowerShellDataFile -Path $buildConfigPath
+
+        # init dependencies
+        if ($script:BuildConfig.Keys -contains 'Dependency') {
+            $script:BuildConfig.Dependency | Initialize-BuildDependency 
+        }
+
+        # code coverage
+        $codeCoverageThreshold = $script:BuildDefault.CodeCoverageThreshold
+        if ($script:BuildConfig.Testing.Keys -contains 'CodeCoverage') {
+            $codeCoverageThreshold = $script:BuildConfig.Testing.CodeCoverageThreshold
+        }
+    }
+
     $script:BuildInfo = Get-BuildEnvironment -ReleaseType $ReleaseType `
-        -GitHubUsername $GitHubUsername -GitHubApiKey $GitHubApiKey -PSGalleryApiKey $PSGalleryApiKey
+        -GitHubUsername $GitHubUsername -GitHubApiKey $GitHubApiKey `
+        -PSGalleryApiKey $PSGalleryApiKey -CodeCoverageThreshold $codeCoverageThreshold
     Set-Location $BuildInfo.ProjectRootPath
 
     if ($VerbosePreference -ne 'SilentlyContinue') {
@@ -509,8 +532,8 @@ task ValidateTestResults PSScriptAnalyzer, Pester, {
     $pester.CodeCoverage.MissedCommands | `
         Export-Csv -Path (Join-Path -Path $BuildInfo.OutputPath -ChildPath 'CodeCoverage.csv') -NoTypeInformation
 
-    if ($codecoverage -lt $CodeCoverageThreshold) {
-        'Pester code coverage ({0:P}) is below threshold {1:P}.' -f $codeCoverage, $CodeCoverageThreshold
+    if ($codecoverage -lt $BuildInfo.CodeCoverageThreshold) {
+        'Pester code coverage ({0:P}) is below threshold {1:P}.' -f $codeCoverage, $BuildInfo.CodeCoverageThreshold
         $testsFailed = $true
     }
 
