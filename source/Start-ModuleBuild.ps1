@@ -34,7 +34,7 @@ $CodeCoverageThreshold = 0.8 # 80%
 
 $script:BuildDefault = @{
     BuildConfigurationFilename = 'build.configuration.psd1'
-    $CodeCoverageThreshold     = 0.8 # 80%
+    CodeCoverageThreshold      = 0.8 # 80%
 }
 
 if($ENV:BHCommitMessage -match "!verbose") {
@@ -78,11 +78,6 @@ Enter-Build {
     $buildConfigPath = Get-ChildItem -Path $script:BuildDefault.BuildConfigurationFilename -Recurse | Select-Object -First 1
     if ($buildConfigPath) {
         $script:BuildConfig = Import-PowerShellDataFile -Path $buildConfigPath
-
-        # init dependencies
-        if ($script:BuildConfig.Keys -contains 'Dependency') {
-            $script:BuildConfig.Dependency | Initialize-BuildDependency 
-        }
 
         # code coverage
         $codeCoverageThreshold = $script:BuildDefault.CodeCoverageThreshold
@@ -154,6 +149,13 @@ task BleachClean {
     }
     catch {
         throw $_
+    }
+}
+
+task InitDependencies {
+    # init dependencies
+    if ($script:BuildConfig.Keys -contains 'Dependency') {
+        $script:BuildConfig.Dependency | Initialize-BuildDependency 
     }
 }
 
@@ -467,7 +469,7 @@ task PSScriptAnalyzer -If (Get-Module PSScriptAnalyzer -ListAvailable) {
                 if ($BuildInfo.PSSACustomRulesPath -ne '') {
                     $splat += @{ 
                         CustomRulePath      = "$(Join-Path -Path $BuildInfo.PSSACustomRulesPath -ChildPath '*.psd1')"
-                        # TODO: This rule is here as it is throwin an exception on some code
+                        # TODO: This rule is here as it is throwing an exception on some code
                         #ExcludeRule         = 'Measure-ErrorActionPreference'
                     }
 
@@ -485,7 +487,7 @@ task PSScriptAnalyzer -If (Get-Module PSScriptAnalyzer -ListAvailable) {
     }
 }
 
-task Pester -If { Get-ChildItem -Path $BuildInfo.TestPath -Filter '*.tests.ps1' -Recurse -File } CopyModuleFilesToBuild, MergeFunctionsToModuleScript, {
+task Pester -If { Get-ChildItem -Path $BuildInfo.TestPath -Filter '*.tests.ps1' -Recurse -File } {
 
     Import-Module $BuildInfo.BuildManifestPath -Global -ErrorAction Stop -Force
     $params = @{
