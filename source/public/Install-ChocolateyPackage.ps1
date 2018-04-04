@@ -18,8 +18,11 @@ function Install-ChocolateyPackage {
 
         Installs the latest version of dummy with the package parameters --noprogress.
     .NOTES
-        Author  : Paul Broadwith (https://github.com/pauby)
+        Author  : Paul Broadwith (https://github.com/pauby) 
         History : 1.0 - 03/04/18 - Initial release
+
+        We use Invoke-Command in this function rather than the & call operator
+        as we can mock it.
     .LINK
         Install-DependentModule
     .LINK
@@ -52,7 +55,7 @@ function Install-ChocolateyPackage {
 
         $chocoInstalled = $true
         try {
-            Invoke-Expression -Command 'choco.exe' | Out-Null
+            Invoke-Command -ScriptBlock { choco.exe } | Out-Null
         }
         catch {
             $chocoInstalled = $false
@@ -64,7 +67,13 @@ function Install-ChocolateyPackage {
                 if ($pscmdlet.ShouldProcess("Chocolatey", "Install")) {
                     # taken from https://chocolatey.org/install
                     Set-ExecutionPolicy Bypass -Scope Process -Force
-                    Invoke-Expression -Command "((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))"
+
+                    # create a temp file to hold the Chocolatey install script and then execute it
+                    do { 
+                        $tempFile = "$(Join-Path -Path $env:TEMP -ChildPath([System.Guid]::NewGuid().ToString())).ps1"
+                    } while (Test-Path $tempFile)
+                    Invoke-WebRequest -UseBasicParsing -Uri 'https://chocolatey.org/install.ps1' -OutFile $tempFile
+                    Invoke-Command -Command { .\$tempFile }
                 }
             }
             catch {
@@ -78,23 +87,23 @@ function Install-ChocolateyPackage {
 
     Process {
         # if we get here chocolatey is installed - install the package
-        $chocoParams = "choco install $Name -y --no-progress"
+        $chocoParams = @('install', "$Name", '-y', '--no-progress')
         if ($Version -ne 'latest') {
-            $chocoParams += " --version=$Version"
+            $chocoParams += "--version=$Version"
         }
 
         if ($PackageParams) {
-            $chocoParams += " --params='$PackageParams'"
+            $chocoParams += "--params='$PackageParams'"
         }
 
-        if ($pscmdlet.ShouldProcess("'$Name' with parameters '$chocoParams'", "Installing Chocolatey package")) {
+        if ($pscmdlet.ShouldProcess("'$Name' with parameters '$($chocoParams -join "" "")'", "Installing Chocolatey package")) {
             # reset the last exit
             $LASTEXITCODE = 0
-            Write-Verbose "Installing version '$Version' of '$Name' package with parameters '$chocoParams'."
-            Invoke-Expression -Command $chocoParams
+            Write-Verbose "Installing version '$Version' of '$Name' package with parameters '$($chocoParams -join "" "")'."
+            Invoke-Command -ScriptBlock { & choco.exe $chocoParams }
             
             if ($LASTEXITCODE -ne 0) {
-                throw "Chocolatey package '$Name' failed to install with command line '$chocoParams'."
+                throw "Chocolatey package '$Name' failed to install with command line '$($chocoParams -join "" "")'"
             }
         }
     }

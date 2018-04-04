@@ -41,20 +41,33 @@ Describe 'Function Testing - Install-ChocolateyPackage' {
     }
 
     Context 'Logic & Flow' {
-        It 'should pass installing Chocolatey packages' {
-            Mock Invoke-Expression -MockWith { return } -ModuleName PSModuleBuildHelper
-            Mock Invoke-Expression -ParameterFilter { $Command -eq 'choco.exe' } -MockWith { throw } -ModuleName PSModuleBuildHelper
+        It 'should try to install Chocolatey' {
             Mock Set-ExecutionPolicy { return } -ModuleName PSModuleBuildHelper
+            Mock Invoke-Command -MockWith { throw } -ModuleName PSModuleBuildHelper
+            Mock Invoke-WebRequest { return } -ModuleName PSModuleBuildHelper
+
+            $tests = [pscustomobject]@{
+                name = 'dummypkg' 
+            }
+
+            { $tests | Install-ChocolateyPackage } | Should -Throw
+            Assert-MockCalled -CommandName Set-ExecutionPolicy -Times 1 -ModuleName PSModuleBuildHelper
+            Assert-MockCalled -CommandName Invoke-Command -Times 2 -ModuleName PSModuleBuildHelper
+            Assert-MockCalled -CommandName Invoke-WebRequest -Times 1 -ModuleName PSModuleBuildHelper
+        }
+
+        It 'should try installing Chocolatey packages' {
+            Mock Invoke-Command -MockWith  { return } -ModuleName PSModuleBuildHelper
 
             $tests = @(
-                [pscustomobject]@{  
+                [pscustomobject]@{
                     name    = 'dummypkg' 
                 },
-                [pscustomobject]@{  
+                [pscustomobject]@{
                     name    = 'dummypkg'
                     version = '1.0'
                 },
-                [pscustomobject]@{  
+                [pscustomobject]@{
                     Name         = 'dummychocopkg'
                     version      = '2.0'
                     packageparam = '--noprogress'
@@ -62,9 +75,8 @@ Describe 'Function Testing - Install-ChocolateyPackage' {
             )
 
             $tests | Install-ChocolateyPackage
-            Assert-MockCalled -CommandName Invoke-Expression -ParameterFilter { $Command -eq 'choco.exe' } -Times 1 -ModuleName PSModuleBuildHelper
-            Assert-MockCalled -CommandName Invoke-Expression -Times 5 -ModuleName PSModuleBuildHelper
-            Assert-MockCalled -CommandName Set-ExecutionPolicy -Times 1 -ModuleName PSModuleBuildHelper
+            #Assert-MockCalled -CommandName Set-ExecutionPolicy -Times 1 -ModuleName PSModuleBuildHelper
+            Assert-MockCalled -CommandName Invoke-Command -Times 4 -ModuleName PSModuleBuildHelper
         }
     }
 } 
