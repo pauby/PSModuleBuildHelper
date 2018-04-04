@@ -28,13 +28,13 @@ function Get-BuildSystem {
     # todo Make these values Enums for use elsewhere?
     $system = switch ((Get-Item env:).name) {
         'APPVEYOR_BUILD_FOLDER' { 'AppVeyor'; break }
-        'GITLAB_CI' { 'GitLab CI' ; break }
+        'GITLAB_CI' { 'GitLab' ; break }
         'JENKINS_URL' { 'Jenkins'; break }
         'BUILD_REPOSITORY_URI' { 'VSTS'; break }
         'TEAMCITY_VERSION' { 'Teamcity'; break }
         'BAMBOO_BUILDKEY' { 'Bamboo'; break }
         'GOCD_SERVER_URL' { 'GoCD'; break }
-        'TRAVIS' { 'Travis CI'; break }
+        'TRAVIS' { 'Travis'; break }
     }
 
     if (-not $system) {
