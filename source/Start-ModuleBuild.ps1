@@ -77,12 +77,14 @@ Enter-Build {
     # Read the configuration file if it exists
     $buildConfigPath = Get-ChildItem -Path $script:BuildDefault.BuildConfigurationFilename -Recurse | Select-Object -First 1
     if ($buildConfigPath) {
+        Write-Verbose "Found build configuration file '$buildConfigPath'."
         $script:BuildConfig = Import-PowerShellDataFile -Path $buildConfigPath
 
         # code coverage
         $codeCoverageThreshold = $script:BuildDefault.CodeCoverageThreshold
-        if ($script:BuildConfig.Testing.Keys -contains 'CodeCoverage') {
+        if ($script:BuildConfig.Testing.Keys -contains 'CodeCoverageThreshold') {
             $codeCoverageThreshold = $script:BuildConfig.Testing.CodeCoverageThreshold
+            Write-Verbose "CodeCoverageThreshold of '$codeCoverageThreshold' found in configuration file."            
         }
     }
 
