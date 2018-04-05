@@ -21,8 +21,20 @@ Describe 'Function Testing - Get-GitLastCommitMessage' {
     }
 
     Context 'Output' {
-        It 'should return a branch name for a location that is a git repo' {
-            Get-GitLastCommitMessage | Should -BeOfType [string] 
+        $commitMsg = 'The world is a Vampire'
+
+        Push-Location
+        Set-Location TestDrive:\
+        git init
+        git checkout -B master
+        git commit --allow-empty -m $commitMsg
+
+        It "should return the last commit message '$commitMsg'" {
+            $result = Get-GitLastCommitMessage
+            $result | Should -BeOfType [string]
+            $result | Should -Be $commitMsg
         }
+
+        Pop-Location
     }
 } 

@@ -21,8 +21,16 @@ Describe 'Function Testing - Get-GitLastCommitHash' {
     }
 
     Context 'Output' {
+        Push-Location
+        Set-Location TestDrive:\
+        git init
+        git checkout -B master
+        git commit --allow-empty -m 'test'
+
         It 'should return a branch name for a location that is a git repo' {
             Get-GitLastCommitHash | Should -BeOfType [string] 
         }
+
+        Pop-Location
     }
 } 
