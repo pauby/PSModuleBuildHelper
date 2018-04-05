@@ -30,6 +30,7 @@ Describe 'Function Testing - Get-BuildEnvironment' {
     $gitHubApiKey = '0987654321'
     $pssaSettings = 'SASettings.psd1'
     $pssaCustomRulesPath = 'CustomRules'
+    $codeCoverageThreshold = 0.72
     $currLoc = Get-Location
     $sources = @( $moduleName, 'source', 'src' )
     ForEach ($sourcePath in $sources) {
@@ -93,15 +94,19 @@ Describe 'Function Testing - Get-BuildEnvironment' {
                 },
                 @{  key      = 'BuildArtifactPath'
                     expected = "$TestDrive\$moduleName\$moduleName-$moduleVersion.zip"
+                },
+                @{  key      = 'CodeCoverageThreshold'
+                    expected = [single]$codeCoverageThreshold
                 }
             )
 
             Set-Location -Path "TestDrive:\$moduleName"
-            # initial the repo so that we can find the project root
+            # init the repo so that we can find the project root
             git init
             $projEnv = Get-BuildEnvironment -ReleaseType 'None' -PSGalleryApiKey $psGalleryApiKey `
                 -GitHubUsername $gitHUbUsername -GitHubApiKey $gitHubApiKey `
-                -PSSASettingsName $pssaSettings -PSSACustomRulesFolderName $pssaCustomRulesPath
+                -PSSASettingsName $pssaSettings -PSSACustomRulesFolderName $pssaCustomRulesPath `
+                -CodeCoverageThreshold $codeCoverageThreshold
             It 'should have the correct value for <key>' -TestCases $tests {
                 Param (
                     $key,

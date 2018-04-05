@@ -30,10 +30,10 @@ CompanyName = 'Paul Broadwith'
 Copyright = '(c) 2018 Paul Broadwith'
 
 # Description of the functionality provided by this module
-Description = 'PowerShell module helper functions'
+Description = 'PowerShell module build helper functions.'
 
 # Minimum version of the Windows PowerShell engine required by this module
-PowerShellVersion = '3.0'
+PowerShellVersion = '5.0'
 
 # Name of the Windows PowerShell host required by this module
 # PowerShellHostName = ''
@@ -98,16 +98,16 @@ PrivateData = @{
         Tags = 'build', 'invoke-build', 'module', 'helper', 'testing'
 
         # A URL to the license for this module.
-        LicenseUri = 'https://github.com/pauby/PSModuleHelper/blob/master/LICENSE'
+        LicenseUri = 'https://github.com/pauby/PSModuleBuildHelper/blob/master/LICENSE'
 
         # A URL to the main website for this project.
-        ProjectUri = 'https://github.com/pauby/PSModuleHelper'
+        ProjectUri = 'https://github.com/pauby/PSModuleBuildHelper'
 
         # A URL to an icon representing this module.
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = 'https://github.com/pauby/PSModuleHelper/blob/master/CHANGELOG.md'
+        ReleaseNotes = 'https://github.com/pauby/PSModuleBuildHelper/blob/master/CHANGELOG.md'
 
     } # End of PSData hashtable
 

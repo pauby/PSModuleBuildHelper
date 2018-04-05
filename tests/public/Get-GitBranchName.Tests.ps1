@@ -10,19 +10,32 @@ else {
             -ChildPath 'psmodulebuildhelper.psd1') -Force
 }
 
-Describe 'Function Testing - Get-GitLastCommitMessage' {
+Describe 'Function Testing - Get-GitBranchName' {
+    Context 'Input' {
+        
+    }
     Context 'Logic & Flow' {
         It 'should throw an exception for a location that is not a git repo' {
             Push-Location
             Set-Location $env:windir
-            { Get-GitLastCommitMessage } | Should throw
+            { Get-GitBranchName } | Should throw
             Pop-Location
         }
     }
 
     Context 'Output' {
-        It 'should return a branch name for a location that is a git repo' {
-            Get-GitLastCommitMessage | Should -BeOfType [string] 
+        Push-Location
+        Set-Location TestDrive:\
+        git init
+        git checkout -B master
+        git commit --allow-empty -m 'test'
+
+        It 'should return a branch name for a location that is a git repo' -Skip:$SkipTest {
+            $result = Get-GitBranchName
+            $result | Should -BeOfType [string]
+            $result | Should -Be 'master'
         }
+
+        Pop-Location
     }
 } 

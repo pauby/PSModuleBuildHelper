@@ -7,25 +7,21 @@ if ($latestBuildVersion -eq '') {
 }
 else {
     Import-Module -FullyQualifiedName (Join-Path -Path (Join-Path -Path $buildOutput -ChildPath $latestBuildVersion) `
-            -ChildPath 'psmodulebuildhelper.psd1') -Force
+        -ChildPath 'psmodulebuildhelper.psd1') -Force
 }
 
-Describe 'Function Testing - Get-GitBranchName' {
-    Context 'Input' {
-        
-    }
-    Context 'Logic & Flow' {
-        It 'should throw an exception for a location that is not a git repo' {
-            Push-Location
-            Set-Location $env:windir
-            { Get-GitBranchName } | Should throw
-            Pop-Location
-        }
-    }
-
+Describe 'Function Testing - Get-BuildSystem' {
     Context 'Output' {
-        It 'should return a branch name for a location that is a git repo' {
-            Get-GitBranchName | Should -BeOfType [string] 
+        It "should return 'Appveyor'" {
+            Mock Get-Item { @{ name = 'APPVEYOR_BUILD_FOLDER' } } -ModuleName PSModuleBuildHelper
+
+            Get-BuildSystem | Should -BeExactly 'AppVeyor'
+        }
+
+        It "should return 'Travis'" {
+            Mock Get-Item { @{ name = 'TRAVIS' } } -ModuleName PSModuleBuildHelper
+
+            Get-BuildSystem | Should -BeExactly 'Travis'
         }
     }
 } 

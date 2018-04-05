@@ -32,6 +32,11 @@ $TestFile = "TestResults_PS$PSVersion`_$TimeStamp.xml"
 $lines = '----------------------------------------------------------------------'
 $CodeCoverageThreshold = 0.8 # 80%
 
+$script:BuildDefault = @{
+    BuildConfigurationFilename = 'build.configuration.psd1'
+    CodeCoverageThreshold      = 0.8 # 80%
+}
+
 if($ENV:BHCommitMessage -match "!verbose") {
     #$global:VerbosePreference = 'Continue'
     $global:VerbosePreference = [System.Management.Automation.ActionPreference]::Continue
@@ -69,8 +74,23 @@ Enter-Build {
     # Github links require >= tls 1.2
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
+    # Read the configuration file if it exists
+    $buildConfigPath = Get-ChildItem -Path $script:BuildDefault.BuildConfigurationFilename -Recurse | Select-Object -First 1
+    if ($buildConfigPath) {
+        Write-Verbose "Found build configuration file '$buildConfigPath'."
+        $script:BuildConfig = Import-PowerShellDataFile -Path $buildConfigPath
+
+        # code coverage
+        $codeCoverageThreshold = $script:BuildDefault.CodeCoverageThreshold
+        if ($script:BuildConfig.Testing.Keys -contains 'CodeCoverageThreshold') {
+            $codeCoverageThreshold = $script:BuildConfig.Testing.CodeCoverageThreshold
+            Write-Verbose "CodeCoverageThreshold of '$codeCoverageThreshold' found in configuration file."            
+        }
+    }
+
     $script:BuildInfo = Get-BuildEnvironment -ReleaseType $ReleaseType `
-        -GitHubUsername $GitHubUsername -GitHubApiKey $GitHubApiKey -PSGalleryApiKey $PSGalleryApiKey
+        -GitHubUsername $GitHubUsername -GitHubApiKey $GitHubApiKey `
+        -PSGalleryApiKey $PSGalleryApiKey -CodeCoverageThreshold $codeCoverageThreshold
     Set-Location $BuildInfo.ProjectRootPath
 
     if ($VerbosePreference -ne 'SilentlyContinue') {
@@ -131,6 +151,13 @@ task BleachClean {
     }
     catch {
         throw $_
+    }
+}
+
+task InitDependencies {
+    # init dependencies
+    if ($script:BuildConfig.Keys -contains 'Dependency') {
+        $script:BuildConfig.Dependency | Initialize-BuildDependency 
     }
 }
 
@@ -444,7 +471,7 @@ task PSScriptAnalyzer -If (Get-Module PSScriptAnalyzer -ListAvailable) {
                 if ($BuildInfo.PSSACustomRulesPath -ne '') {
                     $splat += @{ 
                         CustomRulePath      = "$(Join-Path -Path $BuildInfo.PSSACustomRulesPath -ChildPath '*.psd1')"
-                        # TODO: This rule is here as it is throwin an exception on some code
+                        # TODO: This rule is here as it is throwing an exception on some code
                         #ExcludeRule         = 'Measure-ErrorActionPreference'
                     }
 
@@ -462,7 +489,7 @@ task PSScriptAnalyzer -If (Get-Module PSScriptAnalyzer -ListAvailable) {
     }
 }
 
-task Pester -If { Get-ChildItem -Path $BuildInfo.TestPath -Filter '*.tests.ps1' -Recurse -File } CopyModuleFilesToBuild, MergeFunctionsToModuleScript, {
+task Pester -If { Get-ChildItem -Path $BuildInfo.TestPath -Filter '*.tests.ps1' -Recurse -File } {
 
     Import-Module $BuildInfo.BuildManifestPath -Global -ErrorAction Stop -Force
     $params = @{
@@ -509,8 +536,8 @@ task ValidateTestResults PSScriptAnalyzer, Pester, {
     $pester.CodeCoverage.MissedCommands | `
         Export-Csv -Path (Join-Path -Path $BuildInfo.OutputPath -ChildPath 'CodeCoverage.csv') -NoTypeInformation
 
-    if ($codecoverage -lt $CodeCoverageThreshold) {
-        'Pester code coverage ({0:P}) is below threshold {1:P}.' -f $codeCoverage, $CodeCoverageThreshold
+    if ($codecoverage -lt $BuildInfo.CodeCoverageThreshold) {
+        'Pester code coverage ({0:P}) is below threshold {1:P}.' -f $codeCoverage, $BuildInfo.CodeCoverageThreshold
         $testsFailed = $true
     }
 

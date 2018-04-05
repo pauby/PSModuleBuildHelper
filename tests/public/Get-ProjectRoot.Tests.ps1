@@ -10,19 +10,22 @@ else {
             -ChildPath 'psmodulebuildhelper.psd1') -Force
 }
 
-Describe 'Function Testing - Get-GitLastCommitHash' {
-    Context 'Logic & Flow' {
-        It 'should throw an exception for a location that is not a git repo' {
-            Push-Location
-            Set-Location $env:windir
-            { Get-GitLastCommitHash } | Should throw
-            Pop-Location
+Describe 'Function Testing - Get-ProjectRoot' {
+
+    $currLoc = Get-Location
+    Set-Location -Path 'TestDrive:\'
+
+    Context 'Output' {
+        It 'should throw for no git repo' {
+            { Get-ProjectRoot } | Should -Throw
+        }
+
+        It 'should return the path with a git repo' {
+            git init
+
+            Get-ProjectRoot | Should -Be "$TestDrive"
         }
     }
 
-    Context 'Output' {
-        It 'should return a branch name for a location that is a git repo' {
-            Get-GitLastCommitHash | Should -BeOfType [string] 
-        }
-    }
+    Set-Location -Path $currLoc
 } 

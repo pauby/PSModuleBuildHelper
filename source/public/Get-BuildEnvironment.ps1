@@ -19,6 +19,7 @@ function Get-BuildEnvironment {
     .NOTES
         Author  : Paul Broadwith (https://github.com/pauby)
         History : 1.0 - 15/03/18 - Initial release
+                  1.1 - 04/04/18 - Added CodeCoverageThreshold parameter
 
         The idea came from the Indented.Build project
         (https://github.com/indented-automation/Indented.Build) and heavily
@@ -59,7 +60,12 @@ function Get-BuildEnvironment {
         # searched for under the project root and any .psd1 files found under
         # teh folder will be used.
         [string]
-        $PSSACustomRulesFolderName = 'CustomAnalyzerRules'
+        $PSSACustomRulesFolderName = 'CustomAnalyzerRules',
+
+        # The threshold that test code coverage must meet expressed between 0.01 to 1.00.
+        [ValidateRange(0.01, 1.00)]
+        [single]
+        $CodeCoverageThreshold = 0.8
     )
 
     if (-not $PSBoundParameters.ContainsKey('Verbose')) {
@@ -71,7 +77,7 @@ function Get-BuildEnvironment {
     @(  'LatestVersion', 'ReleaseVersion', 'ReleaseType', 'PSGalleryApiKey', 'RepoBranch', 'RepoLastCommitHash', `
         'RepoLastCommitMessage', 'GitHubUsername', 'GitHubApiKey', 'SourceManifestPath', 'SourceModulePath', `
         'BuildPath', 'BuildManifestPath', 'BuildModulePath', 'PSSASettingsPath', 'PSSACustomRulesPath', `
-        'BuildArtifactPath' 
+        'BuildArtifactPath', 'CodeCoverageThreshold' 
     ) | ForEach-Object {
         $buildInfo | Add-Member -MemberType NoteProperty -Name $_ -Value ''
     }
@@ -121,6 +127,7 @@ function Get-BuildEnvironment {
     $buildInfo.BuildArtifactPath = Join-Path -Path $buildInfo.ProjectRootPath -ChildPath "$($buildInfo.ModuleName)-$($buildInfo.ReleaseVersion).zip"
 
     # PSSA
+    $buildInfo.CodeCoverageThreshold = $CodeCoverageThreshold
     $settingsPath = Get-ChildItem -Path $PSSASettingsName -File -Recurse | Select-Object -First 1
     if ($settingsPath) {
         $buildInfo.PSSASettingsPath = $settingsPath.FullName
