@@ -47,10 +47,11 @@ TestSyntax,
 TestAttributeSyntax,
 CopyModuleFilesToBuild,
 MergeFunctionsToModuleScript,
-UpdateMetadata,
-UpdateModuleHelp,
-MakeHTMLDocs,
-CopyLicense
+CopyLicense,
+UpdateMetadata
+
+task MakeDocs UpdateModuleHelp,
+MakeHTMLDocs
 
 task Test CleanImportedModule, 
 PSScriptAnalyzer,
@@ -59,7 +60,7 @@ ValidateTestResults,
 CreateCodeHealthReport
 
 task PublishToPSGalleryOnly CleanImportedModule,
-PushPSGallery, 
+PublishPSGallery, 
 PushManifestBackToGitHub
 
 task PublishGitReleaseOnly PushGitRelease,
@@ -68,7 +69,7 @@ PushManifestBackToGitHub
 task PublishAll CleanImportedModule,
 PushManifestBackToGitHub,
 ?PushGitRelease,
-?PushPSGallery
+?PublishPSGallery
 
 Enter-Build {
     # Github links require >= tls 1.2
@@ -560,7 +561,7 @@ task PushGitRelease CreateBuildArtifact, {
     }
 }
 
-task PushPSGallery {
+task PublishPSGallery {
     if (-not $BuildInfo.PSGalleryApiKey) {
         Write-Error "Cannot push to the PowerShell Gallery as no Api Key was provided."
     }
@@ -575,7 +576,7 @@ task PushPSGallery {
     if ([version]$psGalleryVersion -lt [version]$BuildInfo.ReleaseVersion) {
         Write-Verbose "Publishing version '$($BuildInfo.ReleaseVersion)' of '$($BuildInfo.ModuleName)' module to PowerShell Gallery."
         Import-Module $BuildInfo.BuildManifestPath -Global -Force
-        Publish-Module -NuGetApiKey $BuildInfo.PSGalleryApiKey -Path $BuildInfo.BuildPath
+        Publish-Module -NuGetApiKey $BuildInfo.PSGalleryApiKey -Path $BuildInfo.BuildPath -ReleaseNotes $BuildInfo.ReleaseNotes
     }
     else {
         throw "PowerShell Gallery Version ($psGalleryVersion) is the same or greater than our new version '($($BuildInfo.ReleaseVersion))'. Cannot publish module."
