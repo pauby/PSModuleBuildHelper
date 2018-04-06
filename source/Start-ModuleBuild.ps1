@@ -286,117 +286,79 @@ task MergeFunctionsToModuleScript {
 }
 
 task UpdateMetadata {
-    try {
-        $path = $BuildInfo.BuildManifestPath
+    # read the source manifest
+    $manifestData = Import-PowerShellDataFile -Path $BuildInfo.SourceManifestPath
 
-        # Manifest Version
-        Update-Metadata -Path $path -PropertyName ModuleVersion -Value $BuildInfo.ReleaseVersion -ErrorAction stop
-        
-        # RootModule
-        if (Get-Metadata $path -PropertyName RootModule) {
-            Update-Metadata $path -PropertyName RootModule -Value "$($BuildInfo.ModuleName).psm1"
-        }
+    # Manifest Version
+    $manifestData.ModuleVersion = $BuildInfo.ReleaseVersion
 
-        # FunctionsToExport
-        $functionsToExport = (Get-ChildItem (Join-Path -Path $BuildInfo.SourcePath -ChildPath 'pub*') -Filter '*.ps1' -Recurse)
-        if ($functionsToExport) {
-            Write-Verbose "FunctionsToExport:`nFound $($functionsToExport.count) public functions to add to manifest 'FunctionsToExport' key."
-            try {
-                Get-Metadata $path -PropertyName FunctionsToExport | Out-Null
+    # RootModule
+    $manifestData.RootModule = "$($BuildInfo.ModuleName).psm1"
+
+    # FunctionsToExport
+    $functionsToExport = (Get-ChildItem (Join-Path -Path $BuildInfo.SourcePath -ChildPath 'pub*') -Filter '*.ps1' -Recurse)
+    if ($functionsToExport) {
+        Write-Verbose "FunctionsToExport:`nFound $($functionsToExport.count) public functions to add to manifest 'FunctionsToExport' key."
+        $manifestData.FunctionsToExport = $functionsToExport.BaseName
+    }
+
+    # RequiredAssemblies
+    if (Test-Path (Join-Path -Path $BuildInfo.SourcePath -ChildPath 'lib\*.dll')) {
+        $manifestData.RequiredAssemblies = (
+            (Get-Item (Join-Path -Path $BuildInfo.SourcePath -ChildPath 'lib\*.dll')).Name | ForEach-Object {
+                Join-Path -Path 'lib' -ChildPath $_
             }
-            catch {
-                throw "FunctionsToExport key does not exists (commented out?)git status"
-            }
-
-            Write-Verbose "FunctionsToExport key exists (not commented out)"
-            Update-Metadata $path -PropertyName FunctionsToExport -Value $functionsToExport.BaseName
-            Write-Verbose "Added $($functionsToExport.count) functions to key."
-        }
-
-<# Leaving this here just now but it requires the module file to be built first
-        # DscResourcesToExport
-        $tokens = $parseErrors = $null
-        $ast = [System.Management.Automation.Language.Parser]::ParseInput(
-            (Get-Content $buildInfo.Path.RootModule -Raw),
-            $buildInfo.Path.RootModule,
-            [Ref]$tokens,
-            [Ref]$parseErrors
         )
-        $dscResourcesToExport = $ast.FindAll( {
-                param ($ast)
+    }
 
-                $ast -is [System.Management.Automation.Language.TypeDefinitionAst] -and 
-                $ast.IsClass -and 
-                $ast.Attributes.TypeName.FullName -contains 'DscResource'
-            }, $true).Name
-        if ($null -ne $dscResourcesToExport) {
-            if (Get-Metadata $path -PropertyName DscResourcesToExport) {
-                Update-Metadata $path -PropertyName DscResourcesToExport -Value $dscResourcesToExport
-            }
-        }#>
+    #ScriptsToProcess
+    $scriptsToProcess = (Get-ChildItem (Join-Path -Path $BuildInfo.SourcePath -ChildPath 'script*') -Filter '*.ps1' -Recurse)
+    if ($scriptsToProcess) {
+        Write-Verbose "ScriptsToProcess:`nFound $($scriptsToProcess.Count) scripts to add to manifest ScriptsToProcess key."
+        $manifestData.ScriptsToProcess = ($scriptsToProcess | `
+                ForEach-Object { 
+                if ($_.FullName -match '(?<name>script.*\\.*\.ps1)') {
+                    Write-Verbose "Adding '$($matches.name)' to ScriptsToProcess"
+                    $matches.name
+                } #end if
+            } #end Foreach
+        )
+    } #end if
 
-        # RequiredAssemblies
-        if (Test-Path (Join-Path -Path $BuildInfo.SourcePath -ChildPath 'lib\*.dll')) {
-            if (Get-Metadata $path -PropertyName RequiredAssemblies) {
-                Update-Metadata $path -PropertyName RequiredAssemblies -Value (
-                    (Get-Item (Join-Path -Path $BuildInfo.SourcePath -ChildPath 'lib\*.dll')).Name | ForEach-Object {
-                        Join-Path -Path 'lib' -ChildPath $_
-                    }
-                )
-            }
+    # FormatsToProcess
+    if (Test-Path (Join-Path -Path $BuildInfo.SourcePath -ChildPath '*.Format.ps1xml')) {
+        $manifestData = (Get-Item (Join-Path -Path $BuildInfo.SourcePath -ChildPath '*.Format.ps1xml')).Name
+    }
+
+    # Attempt to parse the project URI from the list of upstream repositories
+    $gitOriginUri = ''
+    [String]$pushOrigin = (git remote -v) -like 'origin*(push)'
+    if ($pushOrigin -match 'origin\s+(?<origin>https?://\S+).*') {
+        $gitOriginUri = $matches.Origin
+
+        # if we have no license in the source manifest but we have a LICENSE
+        # file then use that
+        if (($manifestData.PrivateData.PSData.Keys -notcontains 'LicenseUri') -and `
+            (Test-Path -Path (Join-Path -Path $BuildInfo.ProjectRootPath -ChildPath 'LICENSE'))) {
+            $manifestData.PrivateData.PSData.LicenseUri = "$gitOriginUri/blob/master/LICENSE"
         }
 
-        #ScriptsToProcess
-        $scriptsToProcess = (Get-ChildItem (Join-Path -Path $BuildInfo.SourcePath -ChildPath 'script*') -Filter '*.ps1' -Recurse)
-        if ($scriptsToProcess) {
-            Write-Verbose "ScriptsToProcess:`nFound $($scriptsToProcess.Count) scripts to add to manifest ScriptsToProcess key."
-            try {
-                Get-Metadata $path -PropertyName ScriptsToProcess | Out-Null
-            }
-            catch {
-                throw "ScriptsToProcess key does not exists (commented out?)git status"
-            }
-
-            Write-Verbose "ScriptsToProcess key exists (not commented out)"
-            Update-Metadata $path -PropertyName ScriptsToProcess -Value (`
-                $scriptsToProcess | ForEach-Object { 
-                    if ($_.FullName -match '(?<name>script.*\\.*\.ps1)') {
-                        Write-Verbose "Adding '$($matches.name)' to ScriptsToProcess"
-                        $matches.name
-                    } #end if
-                } #end Foreach
-            ) #end Update-Metadata
-        } #end if
-
-        # FormatsToProcess
-        if (Test-Path (Join-Path -Path $BuildInfo.SourcePath -ChildPath '*.Format.ps1xml')) {
-            if (Get-Metadata $path -PropertyName FormatsToProcess) {
-                Update-Metadata $path -PropertyName FormatsToProcess `
-                    -Value (Get-Item (Join-Path -Path $BuildInfo.SourcePath -ChildPath '*.Format.ps1xml')).Name
-            }
+        # if we have no project uri then add the git remote origin
+        if ($manifestData.PrivateData.PSData.Keys -notcontains 'ProjectUri') {
+            $manifestData.PrivateData.PSData.ProjectUri = $gitOriginUri
         }
-
-<# TODO: Add a way to use different licences
-        # LicenseUri
-        if (Test-Path (Join-Path $buildInfo.ProjectRootPath 'LICENSE')) {
-            if (Get-Metadata $path -PropertyName LicenseUri) {
-                Update-Metadata $path -PropertyName LicenseUri -Value 'https://opensource.org/licenses/MIT'
-            }
-        }
-#>
-
-        # ProjectUri
-        if (Get-Metadata $path -PropertyName ProjectUri) {
-            # Attempt to parse the project URI from the list of upstream repositories
-            [String]$pushOrigin = (git remote -v) -like 'origin*(push)'
-            if ($pushOrigin -match 'origin\s+(?<ProjectUri>https?://\S+).git') {
-                Update-Metadata $path -PropertyName ProjectUri -Value $matches.ProjectUri
-            }
+        
+        if (($manifestData.PrivateData.PSData.Keys -notcontains 'ReleaseNotes') -and `
+            (Test-Path -Path (Join-Path -Path $BuildInfo.ProjectRootPath -ChildPath 'CHANGELOG.md'))) {
+            $manifestData.PrivateData.PSData.ReleaseNotes = "$gitOriginUri/blob/master/CHANGELOG.md"
         }
     }
-    catch {
-        throw
-    }
+
+    # clone the privatedata key and rthen remove it so we can use it and manifestData for splatting
+    $privateData = ($manifestData.PrivateData.PSData).Clone()
+    $manifestData.Remove('PrivateData')
+
+    New-ModuleManifest -Path $BuildInfo.BuildManifestPath @manifestData @privateData -verbose
 }
 
 task UpdateModuleHelp -If (Get-Module platyPS -ListAvailable) CleanImportedModule, {
