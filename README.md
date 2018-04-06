@@ -50,10 +50,17 @@ Where <PROJECTROOT> is the root folder of your project and is also the module na
 * (6) - This build script is required and can simply dot inlcude the main build script but this is where we start;
 * (7) - If you have comment based help in your functions then they will be used to create Markdown help files in this folder;
 
+# Known Issues
+
+All the known issues will be in [issues].
+
+* [#2][i2] The file containing the release notes MUST end with two blank lines if the last versions notes are to be used;
+
 # TODO
 
 * [ ] - Add [Coveralls](https://coveralls.io) support;
 * [ ] - Capture the output from choco in the Install-ChocolateyPackage function - stops cluttering the screen;
+* [ ] - Add an object to hold default path names, filenames etc. 
 
 # Contributing
 
@@ -67,3 +74,6 @@ Pull requests are very welcome! Make sure your patches are well tested. Ideally 
 * Commit your changes (git commit -am 'Added some feature')
 * Push to the branch (git push origin my-new-feature)
 * Create new Pull Request
+
+[issues]: https://github.com/pauby/PSModuleBuildHelper/issues
+[i2]: https://github.com/pauby/PSModuleBuildHelper/issues/2
