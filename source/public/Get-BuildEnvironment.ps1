@@ -77,7 +77,7 @@ function Get-BuildEnvironment {
     @(  'LatestVersion', 'ReleaseVersion', 'ReleaseType', 'PSGalleryApiKey', 'RepoBranch', 'RepoLastCommitHash', `
         'RepoLastCommitMessage', 'GitHubUsername', 'GitHubApiKey', 'SourceManifestPath', 'SourceModulePath', `
         'BuildPath', 'BuildManifestPath', 'BuildModulePath', 'PSSASettingsPath', 'PSSACustomRulesPath', `
-        'BuildArtifactPath', 'CodeCoverageThreshold' 
+        'BuildArtifactPath', 'CodeCoverageThreshold', 'ReleaseNotes', 'ReleaseNotesPath'
     ) | ForEach-Object {
         $buildInfo | Add-Member -MemberType NoteProperty -Name $_ -Value ''
     }
@@ -118,7 +118,7 @@ function Get-BuildEnvironment {
     }
 
     # Build paths
-    $buildPath = Join-Path -Path (Join-Path -Path $buildInfo.ProjectRootPath -ChildPath 'buildoutput') -ChildPath $buildInfo.ReleaseVersion
+    $buildPath = Join-Path -Path (Join-Path -Path $buildInfo.ProjectRootPath -ChildPath 'releases') -ChildPath $buildInfo.ReleaseVersion
     $buildInfo.BuildPath = $buildPath
     $buildInfo.BuildManifestPath = Join-Path -Path $buildPath -ChildPath "$($buildInfo.ModuleName).psd1"
     $buildInfo.BuildModulePath = Join-Path -Path $buildPath -ChildPath "$($buildInfo.ModuleName).psm1"
@@ -142,6 +142,14 @@ function Get-BuildEnvironment {
     }
     else {
         Write-Verbose "No PSScriptAnalyzer Custom Rules folder '$PSSACustomRulesFolderName' found."
+    }
+
+    # ReleaseNotes
+    $path = Join-Path -Path $buildInfo.ProjectRootPath -ChildPath 'CHANGELOG.md'
+    if (Test-Path $path) {
+        $buildInfo.ReleaseNotesPath = $path
+
+        $buildInfo.ReleaseNotes = Get-BuildReleaseNotes -Path $buildInfo.ReleaseNotesPath -Version $buildInfo.ReleaseVersion
     }
 
     $buildInfo
