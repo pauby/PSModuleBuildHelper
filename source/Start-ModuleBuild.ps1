@@ -359,7 +359,7 @@ task UpdateMetadata {
     $privateData = ($manifestData.PrivateData.PSData).Clone()
     $manifestData.Remove('PrivateData')
 
-    New-ModuleManifest -Path $BuildInfo.BuildManifestPath @manifestData @privateData -verbose
+    New-ModuleManifest -Path $BuildInfo.BuildManifestPath @manifestData @privateData
 }
 
 task UpdateModuleHelp -If (Get-Module platyPS -ListAvailable) CleanImportedModule, {
