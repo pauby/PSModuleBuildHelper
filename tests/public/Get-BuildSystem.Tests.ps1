@@ -1,4 +1,4 @@
-$buildOutput = Join-Path -Path $PSScriptRoot -ChildPath '..\..\buildoutput'
+$buildOutput = Join-Path -Path $PSScriptRoot -ChildPath '..\..\releases'
 $latestBuildVersion = (Get-Childitem $buildOutput | `
         Select-Object -Property @{ l = 'Name'; e = { [version]$_.Name } } | Sort-Object Name -Descending | `
         Select-Object -First 1).Name.ToString()

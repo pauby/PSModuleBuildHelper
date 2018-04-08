@@ -1,4 +1,4 @@
-$buildOutput = Join-Path -Path $PSScriptRoot -ChildPath '..\..\buildoutput'
+$buildOutput = Join-Path -Path $PSScriptRoot -ChildPath '..\..\releases'
 $latestBuildVersion = (Get-Childitem $buildOutput | `
         Select-Object -Property @{ l = 'Name'; e = { [version]$_.Name } } | Sort-Object Name -Descending | `
         Select-Object -First 1).Name.ToString()
@@ -10,7 +10,7 @@ else {
         -ChildPath 'psmodulebuildhelper.psd1') -Force
 }
 
-Describe 'Function Testing - Get-BuildReleaseNotes' {
+Describe 'Function Testing - Get-BuildReleaseNote' {
 
     @"
 ## v0.1 A date
@@ -31,23 +31,23 @@ Some more notes here
         # solution would be to move this so it is not the first test.
         It 'should be true if mandatory parameters have not been changed' {
             $mandatoryParams = @( 'Path', 'Version' )
-            $result = Get-FunctionParameter -Name 'Get-BuildReleaseNotes' | Where-Object { $_.Value.Attributes.Mandatory -eq $true }
+            $result = Get-FunctionParameter -Name 'Get-BuildReleaseNote' | Where-Object { $_.Value.Attributes.Mandatory -eq $true }
             
             @($result).count | Should -Be @($mandatoryParams).Count
             [bool]($result | ForEach-Object { $mandatoryParams -contains $_.key }) | Should -Be $true  
         }
 
         It 'should throw an exception for null or empty parameters' {
-            { Get-BuildReleaseNotes -Path $null } | Should throw
-            { Get-BuildReleaseNotes -Path '' } | Should throw
-            { Get-BuildReleaseNotes -Version $null } | Should throw
-            { Get-BuildReleaseNotes -Version '' } | Should throw
+            { Get-BuildReleaseNote -Path $null } | Should throw
+            { Get-BuildReleaseNote -Path '' } | Should throw
+            { Get-BuildReleaseNote -Version $null } | Should throw
+            { Get-BuildReleaseNote -Version '' } | Should throw
         }
 
         It 'should pass for valid version parameters and throw for invalid ones' {
-            { Get-BuildReleaseNotes -Path 'TestDrive:\releasenotes.md' -Version '1.0.0' } | Should -Not -Throw 
-            { Get-BuildReleaseNotes -Path 'TestDrive:\releasenotes.md' -Version 'latest' -WhatIf } | Should -Throw
-            { Get-BuildReleaseNotes -Path 'TestDrive:\releasenotes.md' -Version 'abc' -WhatIf } | Should -Throw
+            { Get-BuildReleaseNote -Path 'TestDrive:\releasenotes.md' -Version '1.0.0' } | Should -Not -Throw 
+            { Get-BuildReleaseNote -Path 'TestDrive:\releasenotes.md' -Version 'latest' -WhatIf } | Should -Throw
+            { Get-BuildReleaseNote -Path 'TestDrive:\releasenotes.md' -Version 'abc' -WhatIf } | Should -Throw
         }
     }
 
@@ -78,7 +78,7 @@ Some more notes here
                 $expected
             )
 
-            $result = Get-BuildReleaseNotes -Path 'TestDrive:\releasenotes.md' -Version $version -Verbose
+            $result = Get-BuildReleaseNote -Path 'TestDrive:\releasenotes.md' -Version $version
             $result | Should -Be $expected
         }
     }

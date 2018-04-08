@@ -1,4 +1,4 @@
-$buildOutput = Join-Path -Path $PSScriptRoot -ChildPath '..\..\buildoutput'
+$buildOutput = Join-Path -Path $PSScriptRoot -ChildPath '..\..\releases'
 $latestBuildVersion = (Get-Childitem $buildOutput | `
         Select-Object -Property @{ l = 'Name'; e = { [version]$_.Name } } | Sort-Object Name -Descending | `
         Select-Object -First 1).Name.ToString()
@@ -36,7 +36,7 @@ Describe 'Function Testing - Get-BuildEnvironment' {
     ForEach ($sourcePath in $sources) {
         Context "Output - Source Path is '$sourcePath'" {  
             @(  "TestDrive:\$moduleName\$sourcePath", 
-                "TestDrive:\$moduleName\BuildOutput\6.19.0",
+                "TestDrive:\$moduleName\releases\6.19.0",
                 "TestDrive:\$moduleName\Tests\$pssaCustomRulesPath"
             ) | ForEach-Object { New-Item -Path $_ -ItemType Directory }
 
@@ -78,13 +78,13 @@ Describe 'Function Testing - Get-BuildEnvironment' {
                     expected = "$TestDrive\$moduleName\$sourcePath\$modulename.psm1"
                 },
                 @{  key      = 'BuildPath'
-                    expected = "$TestDrive\$moduleName\buildoutput\$moduleVersion"
+                    expected = "$TestDrive\$moduleName\releases\$moduleVersion"
                 },
                 @{  key      = 'BuildManifestPath'
-                    expected = "$TestDrive\$moduleName\buildoutput\$moduleVersion\$modulename.psd1"
+                    expected = "$TestDrive\$moduleName\releases\$moduleVersion\$modulename.psd1"
                 },
                 @{  key      = 'BuildModulePath'
-                    expected = "$TestDrive\$moduleName\buildoutput\$moduleVersion\$modulename.psm1"
+                    expected = "$TestDrive\$moduleName\releases\$moduleVersion\$modulename.psm1"
                 },
                 @{  key      = 'PSSASettingsPath'
                     expected = "$TestDrive\$moduleName\Tests\$pssaSettings"

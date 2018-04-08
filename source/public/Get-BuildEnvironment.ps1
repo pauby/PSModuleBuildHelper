@@ -149,7 +149,7 @@ function Get-BuildEnvironment {
     if (Test-Path $path) {
         $buildInfo.ReleaseNotesPath = $path
 
-        $buildInfo.ReleaseNotes = Get-BuildReleaseNotes -Path $buildInfo.ReleaseNotesPath -Version $buildInfo.ReleaseVersion
+        $buildInfo.ReleaseNotes = Get-BuildReleaseNote -Path $buildInfo.ReleaseNotesPath -Version $buildInfo.ReleaseVersion
     }
 
     $buildInfo
