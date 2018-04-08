@@ -12,7 +12,7 @@
 RootModule = 'psmodulebuildhelper.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.0.1'
+ModuleVersion = '0.1.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -98,16 +98,16 @@ PrivateData = @{
         Tags = 'build', 'invoke-build', 'module', 'helper', 'testing'
 
         # A URL to the license for this module.
-        LicenseUri = 'https://github.com/pauby/PSModuleBuildHelper/blob/master/LICENSE'
+        #LicenseUri = 'https://github.com/pauby/PSModuleBuildHelper/blob/master/LICENSE'
 
         # A URL to the main website for this project.
-        ProjectUri = 'https://github.com/pauby/PSModuleBuildHelper'
+        #ProjectUri = 'https://github.com/pauby/PSModuleBuildHelper'
 
         # A URL to an icon representing this module.
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = 'https://github.com/pauby/PSModuleBuildHelper/blob/master/CHANGELOG.md'
+        #ReleaseNotes = 'https://github.com/pauby/PSModuleBuildHelper/blob/master/CHANGELOG.md'
 
     } # End of PSData hashtable
 
