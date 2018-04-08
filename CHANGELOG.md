@@ -2,6 +2,7 @@
 * Removed the dependency on the 'Configuration' module - we were really only using this to create a build manifest. Now we create a build manifest using the source fields as a template and updating those fields we need to. If you use comments in the source manifest they will be lost as we are effectively building a new one;
 * If you do not specify the ProjectUri, LicenseUri (and you have a LICENSE file in the project root path) or ReleaseNotes (and you have a CHANGELOG.md in the project root path) and you have an 'origin' git remote repo then these will be automatically populated;
 * Added a feature to pull the release notes from the CHANGELOG.md file but the file must end with two blank lines if the last release notes are to be used;
+* Changed module help folder to 'en-US';
 
 ## v0.0.2 5 April 2018
 * Updated the module requirements to PowerShell 5;
