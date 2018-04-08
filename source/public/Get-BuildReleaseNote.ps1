@@ -1,5 +1,5 @@
 #.ExternalHelp PSModuleBuildHelper-help.xml
-function Get-BuildReleaseNotes {
+function Get-BuildReleaseNote {
     <#
     .SYNOPSIS
         Gets the release notes from a file.
@@ -29,7 +29,7 @@ function Get-BuildReleaseNotes {
         number), they will be removed as the release notes shuld be simple text.
         Anything else will be retained.
     .EXAMPLE
-        Get-BuildReleaseNotes -Path 'CHANGELOG.md' -Version '0.0.2'
+        Get-BuildReleaseNote -Path 'CHANGELOG.md' -Version '0.0.2'
 
         Gets the build release notes for version 0.0.2 from CHANGELOG.md
     .OUTPUTS
