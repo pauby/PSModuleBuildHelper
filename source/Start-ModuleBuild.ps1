@@ -372,7 +372,7 @@ task UpdateModuleHelp -If (Get-Module platyPS -ListAvailable) CleanImportedModul
             }
 
             New-ExternalHelp -Path (Join-Path -Path $BuildInfo.ProjectRootPath -ChildPath 'help') `
-                -OutputPath (Join-Path -Path $BuildInfo.BuildPath -ChildPath 'en-GB') -Force | Out-Null
+                -OutputPath (Join-Path -Path $BuildInfo.BuildPath -ChildPath 'en-US') -Force | Out-Null
         }
     }
     catch {
