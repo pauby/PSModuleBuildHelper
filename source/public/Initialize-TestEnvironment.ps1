@@ -36,9 +36,9 @@ function Initialize-TestEnvironment {
         # re-import the module each time if you are running it locally - using
         # the SuppressImportModule will only import it once each session
         Write-Verbose "Removing module '$($testInfo.Modulename)'."
-        Remove-Module $testInfo.ModuleName -Force
+        Remove-Module $testInfo.ModuleName -Force -ErrorAction SilentlyContinue
         Write-Verbose "Importing module '$($testInfo.BuildManifestPath)'"
-        Import-Module -FullyQualifiedName $testInfo.BuildManifestPath -Force
+        Import-Module -FullyQualifiedName $testInfo.BuildManifestPath -Force -Scope Global
     }
     elseif (-not (Get-Module -Name $testInfo.ModuleName -ErrorAction SilentlyContinue) -or !(Test-Path Variable:SuppressImportModule) -or !$SuppressImportModule) {
         # The first time this is called, the module will be forcibly (re-)imported.
