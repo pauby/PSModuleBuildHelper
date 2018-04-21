@@ -349,9 +349,14 @@ task UpdateMetadata {
             $manifestData.PrivateData.PSData.ProjectUri = $gitOriginUri
         }
         
-        if (($manifestData.PrivateData.PSData.Keys -notcontains 'ReleaseNotes') -and `
-            (Test-Path -Path (Join-Path -Path $BuildInfo.ProjectRootPath -ChildPath 'CHANGELOG.md'))) {
-            $manifestData.PrivateData.PSData.ReleaseNotes = "$gitOriginUri/blob/master/CHANGELOG.md"
+        # if we have no release notes then use the notes from the changelog or the changelog URL
+        if ($manifestData.PrivateData.PSData.Keys -notcontains 'ReleaseNotes') {
+            if ($BuildInfo.ReleaseNotes) {
+                $manifestData.PrivateData.PSData.ReleaseNotes = $BuildInfo.ReleaseNotes
+            }
+            elseif (Test-Path -Path (Join-Path -Path $BuildInfo.ProjectRootPath -ChildPath 'CHANGELOG.md')) {
+                $manifestData.PrivateData.PSData.ReleaseNotes = "$gitOriginUri/blob/master/CHANGELOG.md"
+            }
         }
     }
 
