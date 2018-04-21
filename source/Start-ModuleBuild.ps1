@@ -55,8 +55,8 @@ task PublishToPSGalleryOnly CleanImportedModule,
 PublishPSGallery, 
 PushManifestBackToGitHub
 
-task PublishGitReleaseOnly PushGitRelease,
-PushManifestBackToGitHub
+task PublishGitReleaseOnly PushManifestBackToGitHub,
+PushGitRelease
 
 task PublishAll CleanImportedModule,
 PushManifestBackToGitHub,
@@ -67,6 +67,9 @@ Enter-Build {
     # Github links require >= tls 1.2
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
+    # Setup some defaults
+    $codeCoverageThreshold = $script:BuildDefault.CodeCoverageThreshold
+    
     # Read the configuration file if it exists
     $buildConfigPath = Get-ChildItem -Path $script:BuildDefault.BuildConfigurationFilename -Recurse | Select-Object -First 1
     if ($buildConfigPath) {
@@ -74,7 +77,6 @@ Enter-Build {
         $script:BuildConfig = Import-PowerShellDataFile -Path $buildConfigPath
 
         # code coverage
-        $codeCoverageThreshold = $script:BuildDefault.CodeCoverageThreshold
         if ($script:BuildConfig.Testing.Keys -contains 'CodeCoverageThreshold') {
             $codeCoverageThreshold = $script:BuildConfig.Testing.CodeCoverageThreshold
             Write-Verbose "CodeCoverageThreshold of '$codeCoverageThreshold' found in configuration file."            
@@ -280,7 +282,7 @@ task UpdateMetadata {
     # FunctionsToExport
     $functionsToExport = (Get-ChildItem (Join-Path -Path $BuildInfo.SourcePath -ChildPath 'pub*') -Filter '*.ps1' -Recurse)
     if ($functionsToExport) {
-        Write-Verbose "FunctionsToExport:`nFound $($functionsToExport.count) public functions to add to manifest 'FunctionsToExport' key."
+        Write-Verbose "FunctionsToExport: Found $($functionsToExport.count) public functions to add to manifest 'FunctionsToExport' key."
         $manifestData.FunctionsToExport = $functionsToExport.BaseName
     }
 
@@ -296,7 +298,7 @@ task UpdateMetadata {
     #ScriptsToProcess
     $scriptsToProcess = (Get-ChildItem (Join-Path -Path $BuildInfo.SourcePath -ChildPath 'script*') -Filter '*.ps1' -Recurse)
     if ($scriptsToProcess) {
-        Write-Verbose "ScriptsToProcess:`nFound $($scriptsToProcess.Count) scripts to add to manifest ScriptsToProcess key."
+        Write-Verbose "ScriptsToProcess: Found $($scriptsToProcess.Count) scripts to add to manifest ScriptsToProcess key."
         $manifestData.ScriptsToProcess = ($scriptsToProcess | `
                 ForEach-Object { 
                 if ($_.FullName -match '(?<name>script.*\\.*\.ps1)') {
@@ -308,8 +310,10 @@ task UpdateMetadata {
     } #end if
 
     # FormatsToProcess
-    if (Test-Path (Join-Path -Path $BuildInfo.SourcePath -ChildPath '*.Format.ps1xml')) {
-        $manifestData = (Get-Item (Join-Path -Path $BuildInfo.SourcePath -ChildPath '*.Format.ps1xml')).Name
+    $formatsToProcess = (Get-Item (Join-Path -Path $BuildInfo.SourcePath -ChildPath '*.Format.ps1xml'))
+    if ($formatsToProcess) {
+        Write-Verbose "FormatsToProcess: Found $($formatsToProcess.Count) files to add to manifest FormatsToProcess key."
+        $manifestData.FormatsToProcess = $functionsToExport.Name
     }
 
     # Attempt to parse the project URI from the list of upstream repositories
@@ -322,6 +326,7 @@ task UpdateMetadata {
         # file then use that
         if (($manifestData.PrivateData.PSData.Keys -notcontains 'LicenseUri') -and `
             (Test-Path -Path (Join-Path -Path $BuildInfo.ProjectRootPath -ChildPath 'LICENSE'))) {
+            Write-Verbose "Manifest does not contain a LicenseUri key and we have a LICENSE file. Using those."
             $manifestData.PrivateData.PSData.LicenseUri = "$gitOriginUri/blob/master/LICENSE"
         }
 
