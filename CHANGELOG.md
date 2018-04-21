@@ -1,4 +1,4 @@
-## 0.2.0 21 April 2018
+## v0.2.0 21 April 2018
 * Changed the logic of release notes being used - only use them if nothing is in the ReleaseNotes field of the manifest and then use the release notes from the changelog or if we can't extract them use the URL to the changelog itself;
 * The Initialize-TestEnvironment function now loads the module being tested into the Global scope. This was to get around the issue of it being loaded inside this modules' scope;
 * Removed required module 'Configuration';
