@@ -1,6 +1,6 @@
 @{
     Dependency = @(
-        @{  Name    = 'Configuration'
+        @{  Name    = 'PowerShellGet'
             Type    = 'module'
             Version = 'latest'
         },
