@@ -1,12 +1,12 @@
-$buildOutput = Join-Path -Path $PSScriptRoot -ChildPath '..\..\releases'
-$latestBuildVersion = (Get-Childitem $buildOutput | `
+$releases = Join-Path -Path $PSScriptRoot -ChildPath '..\..\releases'
+$latestBuildVersion = (Get-Childitem $releases | `
         Select-Object -Property @{ l = 'Name'; e = { [version]$_.Name } } | Sort-Object Name -Descending | `
         Select-Object -First 1).Name.ToString()
 if ($latestBuildVersion -eq '') {
     throw 'Cannot find the latest build of the module. Did you build it beforehand?'
 }
 else {
-    Import-Module -FullyQualifiedName (Join-Path -Path (Join-Path -Path $buildOutput -ChildPath $latestBuildVersion) `
+    Import-Module -FullyQualifiedName (Join-Path -Path (Join-Path -Path $releases -ChildPath $latestBuildVersion) `
             -ChildPath 'psmodulebuildhelper.psd1') -Force
 }
 
@@ -22,7 +22,7 @@ Describe 'Function Testing - Get-TestEnvironment' {
     ForEach ($sourcePath in $sources) {
         Context "Output - Source Path is '$sourcePath'" {  
             @(  "TestDrive:\MyModule\$sourcePath", 
-                'TestDrive:\MyModule\BuildOutput\6.19.0',
+                'TestDrive:\MyModule\releases\6.19.0',
                 'TestDrive:\MyModule\Tests\CustomRules'
             ) | ForEach { New-Item -Path $_ -ItemType Directory }
 
@@ -37,13 +37,13 @@ Describe 'Function Testing - Get-TestEnvironment' {
                     expected    = "$TestDrive\MyModule\$sourcePath\MyModule.psm1"
                 },
                 @{  key         = 'BuildPath'
-                    expected    = "$TestDrive\MyModule\BuildOutput\6.19.0"
+                    expected    = "$TestDrive\MyModule\releases\6.19.0"
                 },
                 @{  key         = 'BuildManifestPath'
-                    expected    = "$TestDrive\MyModule\BuildOutput\6.19.0\MyModule.psd1"
+                    expected    = "$TestDrive\MyModule\releases\6.19.0\MyModule.psd1"
                 },
                 @{  key         = 'BuildModulePath'
-                    expected    = "$TestDrive\MyModule\BuildOutput\6.19.0\MyModule.psm1"
+                    expected    = "$TestDrive\MyModule\releases\6.19.0\MyModule.psm1"
                 },
                 @{  key         = 'PSSASettingsPath'
                     expected    = "$TestDrive\MyModule\Tests\PSSASettings.psd1"

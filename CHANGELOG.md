@@ -1,7 +1,17 @@
+## 0.2.0 21 April 2018
+* Changed the logic of release notes being used - only use them if nothing is in the ReleaseNotes field of the manifest and then use the release notes from the changelog or if we can't extract them use the URL to the changelog itself;
+* The Initialize-TestEnvironment function now loads the module being tested into the Global scope. This was to get around the issue of it being loaded inside this modules' scope;
+* Removed required module 'Configuration';
+* Added required module 'PowerShellGet';
+* Renamed 'buildoutput' folder to 'releases';
+* Fixed issue with Initialize-TestEnvironment function which was showing errors trying to remove the module being tested when it hadn't been loaded;
+* Added option to add content to the top and bottom of the module script. This is done using the ModuleScript.Header and ModuleScript.Footer properties in the build configuration file. These values must be strings but can be a multi-line script (ie. @"<CONTENT>"@);
+ 
 ## v0.1.0 8 April 2018
 * Removed the dependency on the 'Configuration' module - we were really only using this to create a build manifest. Now we create a build manifest using the source fields as a template and updating those fields we need to. If you use comments in the source manifest they will be lost as we are effectively building a new one;
 * If you do not specify the ProjectUri, LicenseUri (and you have a LICENSE file in the project root path) or ReleaseNotes (and you have a CHANGELOG.md in the project root path) and you have an 'origin' git remote repo then these will be automatically populated;
 * Added a feature to pull the release notes from the CHANGELOG.md file but the file must end with two blank lines if the last release notes are to be used;
+* Changed module help folder to 'en-US';
 
 ## v0.0.2 5 April 2018
 * Updated the module requirements to PowerShell 5;

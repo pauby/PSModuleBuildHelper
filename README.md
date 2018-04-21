@@ -32,7 +32,7 @@ The module function expect to find your file and folder structure as follows:
     |_ README.md [optional] (GitHub README file)
     |_ LICENSE [optional] (module license)
     |
-    |_ buildoutput [created by build process] (holds all built module versions)
+    |_ releases [created by build process] (holds all built module versions)
     |   |_ <VERSION> [created by build process] (your built module)
     |
     |_ output [created by build process] (holds output of tests)
