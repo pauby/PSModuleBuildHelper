@@ -7,6 +7,7 @@
 * Fixed issue with Initialize-TestEnvironment function which was showing errors trying to remove the module being tested when it hadn't been loaded;
 * Added option to add content to the top and bottom of the module script. This is done using the ModuleScript.Header and ModuleScript.Footer properties in the build configuration file. These values must be strings but can be a multi-line script (ie. @"<CONTENT>"@);
 * Rewrote Get-BuildReleaseNote function as the regular expression didn't always work as I wanted. The function now looks a bit clunky but it works;
+* The built module is removed from the session at the end of the build; 
 
 ## v0.1.0 8 April 2018
 * Removed the dependency on the 'Configuration' module - we were really only using this to create a build manifest. Now we create a build manifest using the source fields as a template and updating those fields we need to. If you use comments in the source manifest they will be lost as we are effectively building a new one;
