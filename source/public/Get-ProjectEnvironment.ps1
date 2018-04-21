@@ -52,7 +52,7 @@ function Get-ProjectEnvironment {
 
         ProjectRootPath         = $projectRoot
         SourcePath              = $sourcePath
-        BuildRootPath           = Join-Path -Path $projectRoot -ChildPath 'buildoutput'
+        BuildRootPath           = Join-Path -Path $projectRoot -ChildPath 'releases'
         OutputPath              = Join-Path -Path $projectRoot -ChildPath 'output'
         TestPath                = $testPath
     }

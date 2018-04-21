@@ -57,8 +57,8 @@ function Get-TestEnvironment {
     
     $testInfo = Get-ProjectEnvironment
 
-    $buildOutput = Join-Path -Path $testInfo.ProjectRootPath -ChildPath 'buildoutput'
-    # get all of the versions built in the 'buildoutput' folder, and sort them
+    $buildOutput = Join-Path -Path $testInfo.ProjectRootPath -ChildPath 'releases'
+    # get all of the versions built in the 'releases' folder, and sort them
     # by name and choose the latest one - to sort them by name properly we have
     # to convert the names to versions (as 0.10.0 comes before 0.9.0 when using
     # strings)
