@@ -72,7 +72,7 @@ function Get-BuildReleaseNote {
                 return $notes
             } 
             else {
-                $notes += "$line`r`n" 
+                $notes += "`r`n$line" 
             }
         }
         else {
@@ -87,7 +87,6 @@ function Get-BuildReleaseNote {
                 else {
                     $notes += $line
                 }
-                $notes += "`r`n"
             }
         }
     }
