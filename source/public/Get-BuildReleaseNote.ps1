@@ -22,7 +22,7 @@ function Get-BuildReleaseNote {
             v0.0.4
             Some more release notes
 
-        Note the empty line bwteen the versions and no empty line between the
+        Note the empty line between the versions and no empty line between the
         version number and the release notes for that version.
 
         If using the markdown version (using ## at the start of the version
@@ -35,8 +35,12 @@ function Get-BuildReleaseNote {
     .OUTPUTS
         [String]
     .NOTES
-        Author  : Paul Broadwith (https://github.com/pauby) 
+        Author  : Paul Broadwith (https://github.com/pauby)
+        Project : PSModuleBuildHelper (https://github.com/pauby/psmodulebuildhelper)
         History : 1.0 - 06/04/18 - Initial release
+                  1.1 - 21/04/18 - Rewrote the function as I could not find a good
+                                   enough regex to do the job. It looks clunky but
+                                   it works.
     .LINK
         Get-BuildEnvironment
     #>
@@ -56,12 +60,37 @@ function Get-BuildReleaseNote {
         $Version
     )
 
-    if ((Get-Content $Path -Raw) -match "(?ms)^#*\s*(?<ReleaseNotes>v$Version(.+?)\r\n\S*\r\n)") {
-        Write-Verbose "Found release notes for version '$Version'"
-        $matches.ReleaseNotes.Trim()
+    $matched = $false
+
+    # loop through each line in the $path until we find a matching 'v$Version'
+    # one we do keep each line until we come to either a blank line or the end
+    # of the file
+    $content = (Get-Content -Path $Path).Trim()
+    foreach ($line in $content) {
+        if ($matched) {
+            if ([string]::ISNullOrEmpty($line)) {
+                return $notes
+            } 
+            else {
+                $notes += "$line`r`n" 
+            }
+        }
+        else {
+            if ($line -match "v$Version") {
+                Write-Verbose "Found version '$Version' in '$Path'."
+                $matched = $true
+
+                # remove any '#' from markdown
+                if ($line -match "^#*\s*(?<notes>.*)") {
+                    $notes += $matches.notes
+                }
+                else {
+                    $notes += $line
+                }
+                $notes += "`r`n"
+            }
+        }
     }
-    else {
-        Write-Verbose "Didn't find release notes for version '$Version'"
-        ''
-    }
+
+    $notes
 }
