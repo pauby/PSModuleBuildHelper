@@ -45,20 +45,20 @@ UpdateMetadata
 task MakeDocs UpdateModuleHelp,
 MakeHTMLDocs
 
-task Test CleanImportedModule, 
+task Test {CleanImportedModule},
 PSScriptAnalyzer,
 Pester,
 ValidateTestResults,
 CreateCodeHealthReport
 
-task PublishToPSGalleryOnly CleanImportedModule,
+task PublishToPSGalleryOnly {CleanImportedModule},
 PublishPSGallery, 
 PushManifestBackToGitHub
 
 task PublishGitReleaseOnly PushManifestBackToGitHub,
 PushGitRelease
 
-task PublishAll CleanImportedModule,
+task PublishAll {CleanImportedModule},
 PushManifestBackToGitHub,
 ?PushGitRelease,
 ?PublishPSGallery
@@ -108,6 +108,7 @@ Enter-Build {
 }
 
 Exit-Build {
+    CleanImportedModule
     Write-Host ('-' * 70)
     Write-Host "Build Ended: $(Get-Date)"
 }
@@ -127,7 +128,7 @@ task Clean {
     }
 }
 
-task CleanImportedModule {
+function CleanImportedModule {
     Write-Verbose "Unloading all versions of module '$($buildInfo.ModuleName)'." 
     Remove-Module $buildInfo.ModuleName -ErrorAction SilentlyContinue
     if ($null -ne (Get-Module -Name $buildInfo.ModuleName)) {
