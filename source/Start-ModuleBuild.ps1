@@ -25,21 +25,13 @@ Param (
     $PSGalleryApiKey = $env:PSGALLERY_API_KEY
 )
 
-# Find the build folder based on build system
-$Timestamp = Get-Date -UFormat "%Y%m%d-%H%M%S"
-$PSVersion = $PSVersionTable.PSVersion.Major
-$TestFile = "TestResults_PS$PSVersion`_$TimeStamp.xml"
-$lines = '----------------------------------------------------------------------'
-$CodeCoverageThreshold = 0.8 # 80%
-
 $script:BuildDefault = @{
-    BuildConfigurationFilename = 'build.configuration.psd1'
-    CodeCoverageThreshold      = 0.8 # 80%
+    BuildConfigurationFilename  = 'build.configuration.psd1'
+    CodeCoverageThreshold       = 0.8 # 80%
 }
 
 if($ENV:BHCommitMessage -match "!verbose") {
-    #$global:VerbosePreference = 'Continue'
-    $global:VerbosePreference = [System.Management.Automation.ActionPreference]::Continue
+    $global:VerbosePreference = 'Continue'
 }
 
 task Build Clean,
@@ -95,7 +87,7 @@ Enter-Build {
     Set-Location $BuildInfo.ProjectRootPath
 
     if ($VerbosePreference -ne 'SilentlyContinue') {
-        $lines
+        Write-Host ('-' * 70)
         Write-Host "Build Started: $(Get-Date)"
         Write-Host 'Build System Environment Variables: ============================='
         Get-BuildSystemEnvironment | Hide-SensitiveData
@@ -108,13 +100,13 @@ Enter-Build {
 
         Write-Host 'Build Environment: =============================================='
         $script:BuildInfo | Hide-SensitiveData
-        $lines
+        Write-Host ('-' * 70)
     }
     "`n"
 }
 
 Exit-Build {
-    $lines
+    Write-Host ('-' * 70)
     Write-Host "Build Ended: $(Get-Date)"
 }
 
@@ -255,35 +247,24 @@ task CopyModuleFilesToBuild {
 }
 
 task MergeFunctionsToModuleScript {
-    $fileStream = [System.IO.File]::Create($BuildInfo.BuildModulePath)
-    $writer = New-Object System.IO.StreamWriter($fileStream)
+    # add module header if it exists
+    if ($script:BuildConfig.ModuleScript.Keys -contains 'Header') {
+        $content += $script:BuildConfig.ModuleScript.Header
+        $content += "`r`n`r`n"		
+    }
 
-    $usingStatements = New-Object System.Collections.Generic.List[String]
-
+    # get each build item to add to the module script
     Get-BuildItem -Path $BuildInfo.SourcePath -Type ShouldMerge | ForEach-Object {
-        $functionDefinition = Get-Content $_.FullName | ForEach-Object {
-            if ($_ -match '^using (namespace|assembly)') {
-                $usingStatements.Add($_)
-            }
-            else {
-                $_.TrimEnd()
-            }
-        } | Out-String
-        $writer.WriteLine($functionDefinition.Trim())
-        $writer.WriteLine()
+        $content += Get-Content $_.FullName -Raw
+        $content += "`r`n`r`n"
     }
 
-    $writer.Close()
-
-    $rootModule = (Get-Content $BuildInfo.BuildModulePath -Raw).Trim()
-    if ($usingStatements.Count -gt 0) {
-        # Add "using" statements to be start of the psm1
-        $rootModule = $rootModule.Insert(0, "`r`n`r`n").Insert(
-            0,
-            (($usingStatements.ToArray() | Sort-Object | Get-Unique) -join "`r`n")
-        )
+    # add module footer if it exists
+    if ($script:BuildConfig.ModuleScript.Keys -contains 'Footer') {
+        $content += $script:BuildConfig.ModuleScript.Footer
     }
-    Set-Content -Path $BuildInfo.BuildModulePath -Value $rootModule -NoNewline
+
+    Set-Content -Path $script:BuildInfo.BuildModulePath -Value $content -NoNewline
 }
 
 task UpdateMetadata {
