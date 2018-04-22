@@ -354,7 +354,7 @@ task UpdateMetadata {
     New-ModuleManifest -Path $BuildInfo.BuildManifestPath @manifestData @privateData
 }
 
-task UpdateModuleHelp -If (Get-Module platyPS -ListAvailable) CleanImportedModule, {
+task UpdateModuleHelp -If (Get-Module platyPS -ListAvailable) {CleanImportedModule}, {
     try {
         $moduleInfo = Import-Module $BuildInfo.BuildModulePath -ErrorAction Stop -PassThru
         if ($moduleInfo.ExportedCommands.Count -gt 0) {
