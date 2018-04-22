@@ -28,6 +28,8 @@ Param (
 $script:BuildDefault = @{
     BuildConfigurationFilename  = 'build.configuration.psd1'
     CodeCoverageThreshold       = 0.8 # 80%
+
+    DocPath                    = 'docs'
 }
 
 if($ENV:BHCommitMessage -match "!verbose") {
@@ -356,15 +358,35 @@ task UpdateMetadata {
 
 task UpdateModuleHelp -If (Get-Module platyPS -ListAvailable) {CleanImportedModule}, {
     try {
-        $moduleInfo = Import-Module $BuildInfo.BuildModulePath -ErrorAction Stop -PassThru
+        $moduleInfo = Import-Module -FullyQualifiedName $BuildInfo.BuildModulePath -ErrorAction Stop -PassThru
         if ($moduleInfo.ExportedCommands.Count -gt 0) {
-            $moduleInfo.ExportedCommands.Keys | ForEach-Object { 
-                New-MarkdownHelp -Command $_ `
-                    -OutputFolder (Join-Path -Path $BuildInfo.ProjectRootPath -ChildPath 'help') -Force | Out-Null
-            }
+            $moduleInfo.ExportedCommands.Keys | ForEach-Object {
 
-            New-ExternalHelp -Path (Join-Path -Path $BuildInfo.ProjectRootPath -ChildPath 'help') `
-                -OutputPath (Join-Path -Path $BuildInfo.BuildPath -ChildPath 'en-US') -Force | Out-Null
+                if ($script:BuildConfig.Help.Keys -contains 'DocUri') {
+                    $onlineUrl = $script:BuildConfig.Help.DocUri
+                    if (-not $onlineUrl.EndsWith('/')) {
+                        $onlineUrl += '/'
+                    }
+
+                    $onlineUrl += "$_.md"
+                }
+                else {
+                    $onlineUrl = ''
+                }
+
+                $params = @{
+                    Command               = $_
+                    OutputFolder          = (Join-Path -Path $BuildInfo.ProjectRootPath -ChildPath $script:BuildDefault.DocPath)
+                    OnlineVersionUrl      = $onlineUrl
+                    AlphabeticParamsOrder = $true
+                    Force                 = $true
+                }
+
+                New-MarkdownHelp @params | Out-Null
+
+                #            New-ExternalHelp -Path (Join-Path -Path $BuildInfo.ProjectRootPath -ChildPath $script:BuildDefault.DocPath) `
+                #                -OutputPath (Join-Path -Path $BuildInfo.BuildPath -ChildPath 'en-US') -Force | Out-Null
+            }
         }
     }
     catch {
