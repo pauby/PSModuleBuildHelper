@@ -383,10 +383,10 @@ task UpdateModuleHelp -If (Get-Module platyPS -ListAvailable) {CleanImportedModu
                 }
 
                 New-MarkdownHelp @params | Out-Null
-
-                #            New-ExternalHelp -Path (Join-Path -Path $BuildInfo.ProjectRootPath -ChildPath $script:BuildDefault.DocPath) `
-                #                -OutputPath (Join-Path -Path $BuildInfo.BuildPath -ChildPath 'en-US') -Force | Out-Null
             }
+
+            New-ExternalHelp -Path (Join-Path -Path $BuildInfo.ProjectRootPath -ChildPath $script:BuildDefault.DocPath) `
+                -OutputPath (Join-Path -Path $BuildInfo.BuildPath -ChildPath 'en-US') -Force | Out-Null
         }
     }
     catch {
