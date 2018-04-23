@@ -69,11 +69,11 @@ function Install-ChocolateyPackage {
                     Set-ExecutionPolicy Bypass -Scope Process -Force
 
                     # create a temp file to hold the Chocolatey install script and then execute it
-                    do { 
+                    do {
                         $tempFile = "$(Join-Path -Path $env:TEMP -ChildPath([System.Guid]::NewGuid().ToString())).ps1"
                     } while (Test-Path $tempFile)
                     Invoke-WebRequest -UseBasicParsing -Uri 'https://chocolatey.org/install.ps1' -OutFile $tempFile
-                    Invoke-Command -Command { .\$tempFile }
+                    Invoke-Command -ScriptBlock { & $tempFile }
                 }
             }
             catch {
@@ -100,7 +100,7 @@ function Install-ChocolateyPackage {
             # reset the last exit
             $LASTEXITCODE = 0
             Write-Verbose "Installing version '$Version' of '$Name' package with parameters '$($chocoParams -join "" "")'."
-            Invoke-Command -ScriptBlock { & choco.exe $chocoParams }
+            Invoke-Command -ScriptBlock { choco.exe $chocoParams }
             
             if ($LASTEXITCODE -ne 0) {
                 throw "Chocolatey package '$Name' failed to install with command line '$($chocoParams -join "" "")'"
