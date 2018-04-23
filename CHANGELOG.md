@@ -1,3 +1,11 @@
+## v0.3.0 23 April 2018
+* Fixed issue in UpdateMetadata task where if you had an entry for FormatsToProcess it would overwrite all of the manifest data and cause an exception;
+* Fixed issue where the default Code Coverage Threshold was not being applied if you did not have a build configuration;
+* Reordered tasks to push a git release AFTER the manifest had been committed;
+* If you have help -> DocUri in your build configuration then this will be used as the URL for online documentation when using the UpdateModuleHelp task;
+* Changed behaviour of Get-BuildReleaseNote to not include the line containing the matched version number. Added parameter 'IncludeVersionLine' for when you do want to keep this but by default it is skipped. Also fixed an issue where a blank newline was being added to the end of the notes.
+* Removed function Get-ManifestVersion as it was only effectively one line of code;
+
 ## v0.2.0 21 April 2018
 * Changed the logic of release notes being used - only use them if nothing is in the ReleaseNotes field of the manifest and then use the release notes from the changelog or if we can't extract them use the URL to the changelog itself;
 * The Initialize-TestEnvironment function now loads the module being tested into the Global scope. This was to get around the issue of it being loaded inside this modules' scope;
