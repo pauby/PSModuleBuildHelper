@@ -17,8 +17,6 @@ function Get-PowerShellGalleryVersion {
     .LINK
         Get-NextReleaseVersion
     .LINK
-        Get-ManifestVersion
-    .LINK
         Get-ChangelogVersion
     #>
     [OutputType([Version])]
