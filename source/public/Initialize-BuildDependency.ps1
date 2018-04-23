@@ -71,6 +71,7 @@ function Initialize-BuildDependency {
             switch ($type) {
                 'Module' {
                     Install-DependentModule @params | Out-Null
+                    Import-Module -Name $dep.name
                     break
                 }
                 'Chocolatey' {
