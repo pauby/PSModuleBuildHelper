@@ -3,9 +3,6 @@
 [CmdletBinding()]
 Param ()
 
-$requiredModules = 'InvokeBuild', 'Configuration', 'platyPS', 'PSCodeHealth'
-$chocoPackages = 'pandoc', '7zip'
-
 # dependencies
 $null = Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
 
@@ -14,7 +11,6 @@ Get-PackageProvider -Name NuGet -ForceBootstrap | Out-Null
 Set-PSRepository -Name PSGallery -InstallationPOlicy Trusted
 
 Install-Module -Name PSModuleBuildHelper, InvokeBuild
-
 
 # Configure git
 if ($null -eq (Invoke-Expression -Command 'git config --get user.email')) {
