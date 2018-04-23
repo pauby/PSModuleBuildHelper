@@ -28,6 +28,8 @@ Param (
 $script:BuildDefault = @{
     BuildConfigurationFilename  = 'build.configuration.psd1'
     CodeCoverageThreshold       = 0.8 # 80%
+
+    DocPath                    = 'docs'
 }
 
 if($ENV:BHCommitMessage -match "!verbose") {
@@ -45,20 +47,20 @@ UpdateMetadata
 task MakeDocs UpdateModuleHelp,
 MakeHTMLDocs
 
-task Test CleanImportedModule, 
+task Test {CleanImportedModule},
 PSScriptAnalyzer,
 Pester,
 ValidateTestResults,
 CreateCodeHealthReport
 
-task PublishToPSGalleryOnly CleanImportedModule,
+task PublishToPSGalleryOnly {CleanImportedModule},
 PublishPSGallery, 
 PushManifestBackToGitHub
 
-task PublishGitReleaseOnly PushGitRelease,
-PushManifestBackToGitHub
+task PublishGitReleaseOnly PushManifestBackToGitHub,
+PushGitRelease
 
-task PublishAll CleanImportedModule,
+task PublishAll {CleanImportedModule},
 PushManifestBackToGitHub,
 ?PushGitRelease,
 ?PublishPSGallery
@@ -67,6 +69,9 @@ Enter-Build {
     # Github links require >= tls 1.2
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
+    # Setup some defaults
+    $codeCoverageThreshold = $script:BuildDefault.CodeCoverageThreshold
+    
     # Read the configuration file if it exists
     $buildConfigPath = Get-ChildItem -Path $script:BuildDefault.BuildConfigurationFilename -Recurse | Select-Object -First 1
     if ($buildConfigPath) {
@@ -74,7 +79,6 @@ Enter-Build {
         $script:BuildConfig = Import-PowerShellDataFile -Path $buildConfigPath
 
         # code coverage
-        $codeCoverageThreshold = $script:BuildDefault.CodeCoverageThreshold
         if ($script:BuildConfig.Testing.Keys -contains 'CodeCoverageThreshold') {
             $codeCoverageThreshold = $script:BuildConfig.Testing.CodeCoverageThreshold
             Write-Verbose "CodeCoverageThreshold of '$codeCoverageThreshold' found in configuration file."            
@@ -106,6 +110,7 @@ Enter-Build {
 }
 
 Exit-Build {
+    CleanImportedModule
     Write-Host ('-' * 70)
     Write-Host "Build Ended: $(Get-Date)"
 }
@@ -125,7 +130,7 @@ task Clean {
     }
 }
 
-task CleanImportedModule {
+function CleanImportedModule {
     Write-Verbose "Unloading all versions of module '$($buildInfo.ModuleName)'." 
     Remove-Module $buildInfo.ModuleName -ErrorAction SilentlyContinue
     if ($null -ne (Get-Module -Name $buildInfo.ModuleName)) {
@@ -280,7 +285,7 @@ task UpdateMetadata {
     # FunctionsToExport
     $functionsToExport = (Get-ChildItem (Join-Path -Path $BuildInfo.SourcePath -ChildPath 'pub*') -Filter '*.ps1' -Recurse)
     if ($functionsToExport) {
-        Write-Verbose "FunctionsToExport:`nFound $($functionsToExport.count) public functions to add to manifest 'FunctionsToExport' key."
+        Write-Verbose "FunctionsToExport: Found $($functionsToExport.count) public functions to add to manifest 'FunctionsToExport' key."
         $manifestData.FunctionsToExport = $functionsToExport.BaseName
     }
 
@@ -296,7 +301,7 @@ task UpdateMetadata {
     #ScriptsToProcess
     $scriptsToProcess = (Get-ChildItem (Join-Path -Path $BuildInfo.SourcePath -ChildPath 'script*') -Filter '*.ps1' -Recurse)
     if ($scriptsToProcess) {
-        Write-Verbose "ScriptsToProcess:`nFound $($scriptsToProcess.Count) scripts to add to manifest ScriptsToProcess key."
+        Write-Verbose "ScriptsToProcess: Found $($scriptsToProcess.Count) scripts to add to manifest ScriptsToProcess key."
         $manifestData.ScriptsToProcess = ($scriptsToProcess | `
                 ForEach-Object { 
                 if ($_.FullName -match '(?<name>script.*\\.*\.ps1)') {
@@ -308,8 +313,10 @@ task UpdateMetadata {
     } #end if
 
     # FormatsToProcess
-    if (Test-Path (Join-Path -Path $BuildInfo.SourcePath -ChildPath '*.Format.ps1xml')) {
-        $manifestData = (Get-Item (Join-Path -Path $BuildInfo.SourcePath -ChildPath '*.Format.ps1xml')).Name
+    $formatsToProcess = (Get-Item (Join-Path -Path $BuildInfo.SourcePath -ChildPath '*.Format.ps1xml'))
+    if ($formatsToProcess) {
+        Write-Verbose "FormatsToProcess: Found $($formatsToProcess.Count) files to add to manifest FormatsToProcess key."
+        $manifestData.FormatsToProcess = $functionsToExport.Name
     }
 
     # Attempt to parse the project URI from the list of upstream repositories
@@ -322,6 +329,7 @@ task UpdateMetadata {
         # file then use that
         if (($manifestData.PrivateData.PSData.Keys -notcontains 'LicenseUri') -and `
             (Test-Path -Path (Join-Path -Path $BuildInfo.ProjectRootPath -ChildPath 'LICENSE'))) {
+            Write-Verbose "Manifest does not contain a LicenseUri key and we have a LICENSE file. Using those."
             $manifestData.PrivateData.PSData.LicenseUri = "$gitOriginUri/blob/master/LICENSE"
         }
 
@@ -348,16 +356,36 @@ task UpdateMetadata {
     New-ModuleManifest -Path $BuildInfo.BuildManifestPath @manifestData @privateData
 }
 
-task UpdateModuleHelp -If (Get-Module platyPS -ListAvailable) CleanImportedModule, {
+task UpdateModuleHelp -If (Get-Module platyPS -ListAvailable) {CleanImportedModule}, {
     try {
-        $moduleInfo = Import-Module $BuildInfo.BuildModulePath -ErrorAction Stop -PassThru
+        $moduleInfo = Import-Module -FullyQualifiedName $BuildInfo.BuildModulePath -ErrorAction Stop -PassThru
         if ($moduleInfo.ExportedCommands.Count -gt 0) {
-            $moduleInfo.ExportedCommands.Keys | ForEach-Object { 
-                New-MarkdownHelp -Command $_ `
-                    -OutputFolder (Join-Path -Path $BuildInfo.ProjectRootPath -ChildPath 'help') -Force | Out-Null
+            $moduleInfo.ExportedCommands.Keys | ForEach-Object {
+
+                if ($script:BuildConfig.Help.Keys -contains 'DocUri') {
+                    $onlineUrl = $script:BuildConfig.Help.DocUri
+                    if (-not $onlineUrl.EndsWith('/')) {
+                        $onlineUrl += '/'
+                    }
+
+                    $onlineUrl += "$_.md"
+                }
+                else {
+                    $onlineUrl = ''
+                }
+
+                $params = @{
+                    Command               = $_
+                    OutputFolder          = (Join-Path -Path $BuildInfo.ProjectRootPath -ChildPath $script:BuildDefault.DocPath)
+                    OnlineVersionUrl      = $onlineUrl
+                    AlphabeticParamsOrder = $true
+                    Force                 = $true
+                }
+
+                New-MarkdownHelp @params | Out-Null
             }
 
-            New-ExternalHelp -Path (Join-Path -Path $BuildInfo.ProjectRootPath -ChildPath 'help') `
+            New-ExternalHelp -Path (Join-Path -Path $BuildInfo.ProjectRootPath -ChildPath $script:BuildDefault.DocPath) `
                 -OutputPath (Join-Path -Path $BuildInfo.BuildPath -ChildPath 'en-US') -Force | Out-Null
         }
     }

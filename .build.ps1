@@ -26,7 +26,7 @@ $params = @{
 
 . (Get-BuildScript) @params
 
-task Test CleanImportedModule, 
+task Test {CleanImportedModule}, 
 PSScriptAnalyzer,
 Pester,
 ValidateTestResults

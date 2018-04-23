@@ -110,7 +110,7 @@ function Get-BuildEnvironment {
 
     # Versions
     if (Test-Path -Path $buildInfo.SourceManifestPath) {
-        $buildInfo.LatestVersion = Get-ManifestVersion -Path $buildInfo.SourceManifestPath
+        $buildInfo.LatestVersion = (Import-PowerShellDataFile -Path $buildInfo.SourceManifestPath).ModuleVersion
         $buildInfo.ReleaseVersion = Get-NextReleaseVersion -LatestVersion $buildInfo.LatestVersion -ReleaseType $buildInfo.ReleaseType
     }
     else {

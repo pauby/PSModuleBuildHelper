@@ -65,13 +65,13 @@ function Install-DependentModule {
     if ($pscmdlet.ShouldProcess("$Version version of module $Name", "Installing module")) {
         if ($Version -ne 'latest') {
             Write-Verbose "Installing version '$Version' of module '$Name'"
-            Install-Module -Name $Name -RequiredVersion $Version -Scope CurrentUser
+            Install-Module -Name $Name -RequiredVersion $Version -Scope CurrentUser -Force
             # return the version of the module we installed
             Get-Module -Name $Name -ListAvailable | Where-Object { [Version]$_.Version -eq [Version]$Version }
         }
         else {
             Write-Verbose "Installing latest version of module '$Name'"
-            Install-Module -Name $Name -Scope CurrentUser
+            Install-Module -Name $Name -Scope CurrentUser -Force
             # return only the latest version of this module
             Get-Module -Name $Name -ListAvailable | Sort-Object Version -Descending | Select-Object -First 1
         }

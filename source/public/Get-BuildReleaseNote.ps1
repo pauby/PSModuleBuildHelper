@@ -41,6 +41,10 @@ function Get-BuildReleaseNote {
                   1.1 - 21/04/18 - Rewrote the function as I could not find a good
                                    enough regex to do the job. It looks clunky but
                                    it works.
+                  2.0 - 23/04/18 - The version number line is not included by
+                                   default so added a parameter to include it. Fixed
+                                   issue where newlines were being added at the end
+                                   of the notes.
     .LINK
         Get-BuildEnvironment
     #>
@@ -57,35 +61,48 @@ function Get-BuildReleaseNote {
         [Parameter(Mandatory)]
         [ValidateScript( { try { [version]$_ } catch { return $false } $true } )]
         [string]
-        $Version
+        $Version,
+
+        # Include the line containing the version number in the notes
+        [switch]
+        $IncludeVersionLine
     )
 
-    $matched = $false
+    # number of matched lines
+    $matched = 0
 
     # loop through each line in the $path until we find a matching 'v$Version'
     # one we do keep each line until we come to either a blank line or the end
     # of the file
     $content = (Get-Content -Path $Path).Trim()
     foreach ($line in $content) {
-        if ($matched) {
+        if ($matched -gt 0) {
             if ([string]::ISNullOrEmpty($line)) {
                 return $notes
             } 
-            else {
-                $notes += "`r`n$line" 
+            elseif ($matched -eq 1) {
+                $notes += $line
             }
+            else {
+                $notes += "`r`n$line"
+            }
+            $matched++
         }
         else {
             if ($line -match "v$Version") {
                 Write-Verbose "Found version '$Version' in '$Path'."
-                $matched = $true
+                $matched++
 
-                # remove any '#' from markdown
-                if ($line -match "^#*\s*(?<notes>.*)") {
-                    $notes += $matches.notes
-                }
-                else {
-                    $notes += $line
+                if ($IncludeVersionLine.IsPresent) {
+                    # remove any '#' from markdown
+                    if ($line -match "^#*\s*(?<notes>.*)") {
+                        $notes += $matches.notes
+                    }
+                    else {
+                        $notes += $line
+                    }
+
+                    $notes += "`r`n"
                 }
             }
         }

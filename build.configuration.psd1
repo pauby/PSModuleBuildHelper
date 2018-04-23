@@ -12,6 +12,10 @@
             Type    = 'module'
             Version = 'latest'
         },
+        @{  Name    = 'Configuration'
+            Type    = 'module'
+            Version = 'latest'
+        },
         @{  Name    = 'pandoc'
             Type    = 'Chocolatey'
             Version = 'latest'

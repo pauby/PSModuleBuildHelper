@@ -21,7 +21,6 @@ v0.0.7 Another date
 A note here
 Some more notes here
 * A list
-
 "@ | Set-Content 'TestDrive:\releasenotes.md'
 
     Context 'Input' {
@@ -59,6 +58,14 @@ v0.1 A date
 * Some notes
 some more notes
 "@
+                include     = $true
+            },
+            @{  version     = '0.1'
+                expected    = @"
+* Some notes
+some more notes
+"@
+                include     = $false
             },
             @{
                 version     = '0.0.7'
@@ -68,17 +75,28 @@ A note here
 Some more notes here
 * A list
 "@
+                include     = $true
+            },
+            @{
+                version  = '0.0.7'
+                expected = @"
+A note here
+Some more notes here
+* A list
+"@
+                include  = $false
             }
         )
 
 
-        It 'should return the release notes for version <version>' -TestCases $tests {
+        It 'should return the release notes for version <version> with version line included being <include>' -TestCases $tests {
             param (
                 $version,
-                $expected
+                $expected,
+                $include
             )
 
-            $result = Get-BuildReleaseNote -Path 'TestDrive:\releasenotes.md' -Version $version
+            $result = Get-BuildReleaseNote -Path 'TestDrive:\releasenotes.md' -Version $version -IncludeVersionLine:$include
             $result | Should -Be $expected
         }
     }
