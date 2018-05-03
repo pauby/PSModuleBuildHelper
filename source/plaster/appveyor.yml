@@ -1,0 +1,66 @@
+# See http://www.appveyor.com/docs/appveyor-yml for more options
+
+os: WMF 5
+
+version: 1.1.0.{build}
+max_jobs: 1
+
+environment:
+  PSGALLERY_API_KEY:
+    secure: <APPVEYOR SECURE KEY>
+
+  GITHUB_API_KEY:
+    secure: <APPVEYOR SECURE KEY>
+
+  GITHUB_USERNAME:
+    secure: <APPVEYOR SECURE KEY>
+
+  appveyor_rdp_password:
+    secure: <APPVEYOR SECURE KEY>
+
+  notify_email:
+    secure: <APPVEYOR SECURE KEY>
+    
+branches:
+  only:
+  - master
+
+#skip_commits:
+#  message: /updated? readme.*/
+
+only_commits:
+  message: /^Rebuild|^Release/
+
+build: false # disable MSBuild
+
+init:
+#  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+
+install:
+  - git --version
+  - choco --version
+
+  - ps: |
+      Set-Location $env:APPVEYOR_BUILD_FOLDER
+      .\build\Initialize-Build.ps1
+      git config --global credential.helper store
+      Add-Content "$env:USERPROFILE\.git-credentials" "https://$($env:GITHUB_API_KEY):x-oauth-basic@github.com`n"
+
+build_script:
+  - ps: |
+      $Verbose = @{}
+      $tasks = 'Build', 'Test'
+      switch -Regex ($env:APPVEYOR_REPO_COMMIT_MESSAGE) {
+          '!verbose' {
+              $Verbose = @{ Verbose = $true }
+          }
+          '!publish' {
+              git checkout master -q
+              $tasks += 'PublishAll'
+          }
+      }
+
+      Invoke-Build $tasks @Verbose
+
+on_finish:
+#  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))

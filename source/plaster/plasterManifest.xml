@@ -1,0 +1,194 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<plasterManifest schemaVersion="1.0" xmlns="http://www.microsoft.com/schemas/PowerShell/Plaster/v1">
+    <metadata>
+        <name>PSModuleBuildHelper</name>
+        <id>903cadc4-91fa-49be-9aa5-c332bf76adf6</id>
+        <version>1.0.0</version>
+        <title>PSModuleBuildHelper</title>
+        <description>Plaster template for creating the files for a PowerShell module compatible with PSModuleBuildHelper.</description>
+        <author>Paul Broadwith (https://github.com/pauby/psmodulebuildhelper)</author>
+        <tags>Module, ModuleManifest, Build, Helper</tags>
+    </metadata>
+
+    <parameters>
+        <parameter 	name    = 'FullName'
+                    type    = 'text'
+                    prompt  = 'Enter your full name'/>
+        <parameter 	name    = 'ModuleName'
+                    type    = 'text'
+                    prompt  = 'Enter the name of the module'/>
+        <parameter 	name    = 'ModuleDesc'
+                    type    = 'text'
+                    prompt  = 'Enter a description for the module'/>
+        <parameter 	name    = 'Version'
+                    type    = 'text'
+                    default = '0.0.1'
+                    prompt  = 'Enter the version number for the module'/>
+        <parameter name     = 'Options' type='multichoice' default='0,1,2,3' store='text' prompt='Select desired options'>
+            <choice label   = '&amp;Pester test support'
+                    help    = "Adds Tests directory and a starter Pester Tests file."
+                    value   = "Pester"/>
+            <choice label   = 'Create &amp;Module Manifest'
+                    help    = "Creates a PowerShell Module Manifest."
+                    value   = "Manifest"/>
+            <choice label   = '&amp;Git'
+                    help    = "Adds a .gitignore file, README and CHANGELOG."
+                    value   = "Git"/>
+            <choice label   = '&amp;AppVeyor'
+                    help    = 'Adds a appveyor.yml file'
+                    value   = 'AppVeyor' />
+            <choice label   = '&amp;None'
+                    help    = "No options specified."
+                    value   = "None"/>
+        </parameter>
+        <parameter name     = 'License' type='multichoice' default='0' store='text' prompt='Choose the code license'>
+            <choice label   = '&amp;MIT'
+                    help    = "MIT License."
+                    value   = "MIT"/>
+        </parameter>
+        <parameter  name    = 'Editor'
+                    type    = 'choice'
+                    prompt  = 'Select an editor for editor integration (or None):'
+                    default = '0'
+                    store   = 'text' >
+            <choice label   = 'Visual Studio &amp;Code'
+                    help    = "Your editor is Visual Studio Code."
+                    value   = "VSCode"/>
+            <choice label   = '&amp;None'
+                    help    = "No editor specified."
+                    value   = "None"/>
+        </parameter>
+    </parameters>
+
+    <content>
+        <message>&#10;&#10;Scaffolding your PowerShell Module...&#10;&#10;&#10;</message>
+        <file   source      = ''
+                destination = 'source\'/>
+        <file   source      = ''
+                destination = 'source\public'/>
+        <file   source      = ''
+                destination = 'source\private'/>
+        <file   source      = ''
+                destination = 'source\en-US'/>
+        <file   source      = 'about_MODULENAME.help.txt'
+                destination = 'source\en-US\about_${PLASTER_PARAM_ModuleName}.help.txt'/>
+        <modify path = 'source\en-US\about_${PLASTER_PARAM_ModuleName}.help.txt'>
+            <replace>
+                <original>__about_MODULE__</original>
+                <substitute expand = 'true'>about_${PLASTER_PARAM_ModuleName}</substitute>
+            </replace>
+            <replace>
+                <original>__SHORT_DESCRIPTION__</original>
+                <substitute expand = 'true'>${PLASTER_PARAM_ModuleDesc}</substitute>
+            </replace>
+            <replace>
+                <original>__LONG_DESCRIPTION__</original>
+                <substitute expand = 'true'>${PLASTER_PARAM_ModuleDesc}</substitute>
+            </replace>
+        </modify>
+
+        <file   source=''
+                destination='tests\'
+                condition='$PLASTER_PARAM_Options -contains "Pester"'/>
+        <file   source=''
+                destination='tests\public'
+                condition='$PLASTER_PARAM_Options -contains "Pester"'/>
+        <file   source=''
+                destination='tests\private'
+                condition='$PLASTER_PARAM_Options -contains "Pester"'/>
+
+        <file   source      = '.build.ps1'
+                destination = ''/>
+        <file   source      = 'build.configuration.psd1'
+                destination = ''/>
+
+        <file   source      = '.gitignore'
+                destination = ''
+                condition   = '$PLASTER_PARAM_Options -contains "Git"'/>
+        <file   source      = 'CHANGELOG.md'
+                destination = ''
+                condition   = '$PLASTER_PARAM_Options -contains "Git"'/>
+        <modify path = 'CHANGELOG.md'
+                condition   = '$PLASTER_PARAM_Options -contains "Git"'>
+            <replace>
+                <original>__VERSION__</original>
+                <substitute expand = 'true'>${PLASTER_PARAM_Version}</substitute>
+            </replace>
+        </modify>
+        <file   source      = 'README.md'
+                destination = ''
+                condition   = '$PLASTER_PARAM_Options -contains "Git"'/>
+        <modify path = 'README.md'
+                condition   = '$PLASTER_PARAM_Options -contains "Git"'>
+            <replace>
+                <original>__MODULENAME__</original>
+                <substitute expand = 'true'>${PLASTER_PARAM_ModuleName}</substitute>
+            </replace>
+            <replace>
+                <original>__DESCRIPTION__</original>
+                <substitute expand = 'true'>${PLASTER_PARAM_ModuleDesc}</substitute>
+            </replace>
+        </modify>
+
+        <file   source      = 'appveyor.yml'
+                destination = ''
+                condition   = '$PLASTER_PARAM_Options -contains "AppVeyor"'/>
+
+        <file   source      = 'MIT-LICENSE'
+                destination = 'LICENSE'
+                condition   = '$PLASTER_PARAM_License -contains "MIT"'/>
+
+        <message condition='$PLASTER_PARAM_Options -contains "Manifest"'>
+        
+Creating Module Manifest for module $PLASTER_PARAM_ModuleName ... 
+
+</message>
+        <newModuleManifest  destination         = 'source\${PLASTER_PARAM_ModuleName}.psd1'
+                            moduleVersion       = '$PLASTER_PARAM_Version'
+                            rootModule          = '${PLASTER_PARAM_ModuleName}.psm1'
+                            author              = '$PLASTER_PARAM_FullName'
+                            description         = '$PLASTER_PARAM_ModuleDesc'
+                            encoding            = 'UTF8-NoBOM'
+                            openInEditor        = 'true'/>
+        <modify path = 'source\${PLASTER_PARAM_ModuleName}.psd1'>
+            <replace>
+                <original>FunctionsToExport\s*=\s*'\*'</original>
+                <substitute>FunctionsToExport = ''</substitute>
+            </replace>
+            <replace>
+                <original>CmdletsToExport\s*=\s*'\*'</original>
+                <substitute>CmdletsToExport = ''</substitute>
+            </replace>
+            <replace>
+                <original>VariablesToExport\s*=\s*'\*'</original>
+                <substitute>VariablesToExport = ''</substitute>
+            </replace>
+            <replace>
+                <original>AliasesToExport\s*=\s*'\*'</original>
+                <substitute>AliasesToExport = ''</substitute>
+            </replace>
+        </modify>
+
+        <requireModule name="Pester" condition="$PLASTER_PARAM_AddTest -eq 'Yes'" minimumVersion="3.4.0"
+            message="Without Pester, you will not be able to run the provided Pester test to validate your module manifest file.`nWithout version 3.4.0, VS Code will not display Pester warnings and errors in the Problems panel."/>
+
+        <message>
+
+Your new PowerShell module project '$PLASTER_PARAM_ModuleName' has been created.
+
+        </message>
+
+        <message condition='$PLASTER_PARAM_Options -contains "Pester"'>
+
+* Add additional tests to the test directory;
+* You can run the Pester tests in your project by executing the 'test' task;
+* Press Ctrl+P, then type 'task test' in VS Code;
+        </message>
+        <message condition='$PLASTER_PARAM_Options -contains "Git"'>
+* Remember to initialise this repository using `git init`;
+        </message>
+        <message>
+
+        </message>
+    </content>
+</plasterManifest>
