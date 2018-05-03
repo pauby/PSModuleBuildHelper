@@ -4,4 +4,4 @@
 output/
 help/
 [0-9].*/
-buildoutput/
+releases/
