@@ -316,7 +316,7 @@ task UpdateMetadata {
     $formatsToProcess = (Get-Item (Join-Path -Path $BuildInfo.SourcePath -ChildPath '*.Format.ps1xml'))
     if ($formatsToProcess) {
         Write-Verbose "FormatsToProcess: Found $($formatsToProcess.Count) files to add to manifest FormatsToProcess key."
-        $manifestData.FormatsToProcess = $functionsToExport.Name
+        $manifestData.FormatsToProcess = $formatsToProcessName
     }
 
     # Attempt to parse the project URI from the list of upstream repositories
