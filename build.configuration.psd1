@@ -29,4 +29,11 @@
     Testing = @{
         CodeCoverageThreshold = 0.7
     }
+
+    ModuleScript = @{
+        Header = @"
+Set-StrictMode -Version Latest
+"@
+        Footer = ""
+    }
 }
