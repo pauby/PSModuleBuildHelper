@@ -1,3 +1,7 @@
+## v0.3.1 9 July 2018
+
+* Fixed issue where FormatsToProcess in the module manifest was being populated with public functions;
+
 ## v0.3.0 23 April 2018
 * Fixed issue in UpdateMetadata task where if you had an entry for FormatsToProcess it would overwrite all of the manifest data and cause an exception;
 * Fixed issue where the default Code Coverage Threshold was not being applied if you did not have a build configuration;
