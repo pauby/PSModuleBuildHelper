@@ -26,7 +26,7 @@ Param (
 )
 
 $script:BuildDefault = @{
-    BuildConfigurationFilename  = 'build.configuration.psd1'
+    BuildConfigurationFilename  = 'build.configuration.json'
     CodeCoverageThreshold       = 0.8 # 80%
 
     DocPath                    = 'docs'
@@ -76,7 +76,8 @@ Enter-Build {
     $buildConfigPath = Get-ChildItem -Path $script:BuildDefault.BuildConfigurationFilename -Recurse | Select-Object -First 1
     if ($buildConfigPath) {
         Write-Verbose "Found build configuration file '$buildConfigPath'."
-        $script:BuildConfig = Import-PowerShellDataFile -Path $buildConfigPath
+        $script:BuildConfig = Get-Content -Path $buildConfigPath -Raw | ConvertFrom-Json
+#        $script:BuildConfig = Import-PowerShellDataFile -Path $buildConfigPath
 
         # code coverage
         if ($script:BuildConfig.Testing.Keys -contains 'CodeCoverageThreshold') {
@@ -316,7 +317,7 @@ task UpdateMetadata {
     $formatsToProcess = (Get-Item (Join-Path -Path $BuildInfo.SourcePath -ChildPath '*.Format.ps1xml'))
     if ($formatsToProcess) {
         Write-Verbose "FormatsToProcess: Found $($formatsToProcess.Count) files to add to manifest FormatsToProcess key."
-        $manifestData.FormatsToProcess = $functionsToExport.Name
+        $manifestData.FormatsToProcess = $formatsToProcess.Name
     }
 
     # Attempt to parse the project URI from the list of upstream repositories
