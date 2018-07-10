@@ -253,10 +253,12 @@ task CopyModuleFilesToBuild {
 }
 
 task MergeFunctionsToModuleScript {
+    $content = ""
     # add module header if it exists
-    if ($script:BuildConfig.ModuleScript.Keys -contains 'Header') {
+    if (-not [string]::IsNullOrEmpty($script:BuildConfig.ModuleScript.Header)) {
+        Write-Verbose "Found 'Header' in build configuration. Adding to top of module script."
         $content += $script:BuildConfig.ModuleScript.Header
-        $content += "`r`n`r`n"		
+        $content += "`r`n`r`n"
     }
 
     # get each build item to add to the module script
@@ -266,7 +268,7 @@ task MergeFunctionsToModuleScript {
     }
 
     # add module footer if it exists
-    if ($script:BuildConfig.ModuleScript.Keys -contains 'Footer') {
+    if (-not [string]::IsNullOrEmpty($script:BuildConfig.ModuleScript.Footer)) {
         $content += $script:BuildConfig.ModuleScript.Footer
     }
 
