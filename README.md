@@ -61,6 +61,7 @@ All the known issues will be in [issues].
 * [ ] - Add [Coveralls](https://coveralls.io) support;
 * [ ] - Capture the output from choco in the Install-ChocolateyPackage function - stops cluttering the screen;
 * [ ] - Add an object to hold default path names, filenames etc. 
+* [ ] - Change release types to match [version] object keys - major, minor, build, revision
 
 # Contributing
 
