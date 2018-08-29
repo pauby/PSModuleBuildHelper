@@ -54,7 +54,7 @@ ValidateTestResults,
 CreateCodeHealthReport
 
 task PublishToPSGalleryOnly {CleanImportedModule},
-PublishPSGallery, 
+PublishPSGallery,
 PushManifestBackToGitHub
 
 task PublishGitReleaseOnly PushManifestBackToGitHub,
@@ -71,7 +71,7 @@ Enter-Build {
 
     # Setup some defaults
     $codeCoverageThreshold = $script:BuildDefault.CodeCoverageThreshold
-    
+
     # Read the configuration file if it exists
     $buildConfigPath = Get-ChildItem -Path $script:BuildDefault.BuildConfigurationFilename -Recurse | Select-Object -First 1
     if ($buildConfigPath) {
@@ -81,7 +81,7 @@ Enter-Build {
         # code coverage
         if ($script:BuildConfig.Testing.Keys -contains 'CodeCoverageThreshold') {
             $codeCoverageThreshold = $script:BuildConfig.Testing.CodeCoverageThreshold
-            Write-Verbose "CodeCoverageThreshold of '$codeCoverageThreshold' found in configuration file."            
+            Write-Verbose "CodeCoverageThreshold of '$codeCoverageThreshold' found in configuration file."
         }
     }
 
@@ -90,6 +90,7 @@ Enter-Build {
         -PSGalleryApiKey $PSGalleryApiKey -CodeCoverageThreshold $codeCoverageThreshold
     Set-Location $BuildInfo.ProjectRootPath
 
+    New-Item -Name $script:BuildInfo.OutputPath -ItemType Directory -ErrorAction SilentlyContinue
     if ($VerbosePreference -ne 'SilentlyContinue') {
         Write-Host ('-' * 70)
         Write-Host "Build Started: $(Get-Date)"
@@ -118,10 +119,10 @@ Exit-Build {
 # Synopsis: Remove build folder
 task Clean {
     try {
-        $BuildInfo.BuildPath, $BuildInfo.OutputPath | ForEach-Object { 
-            Write-Verbose "Removing folder $_" 
+        $BuildInfo.BuildPath, $BuildInfo.OutputPath | ForEach-Object {
+            Write-Verbose "Removing folder $_"
             Remove-Item -Path $_ -Recurse -Force -ErrorAction SilentlyContinue | Out-Null
-            Write-Verbose "Creating folder $_" 
+            Write-Verbose "Creating folder $_"
             New-Item $_ -ItemType Directory -Force | Out-Null
         }
     }
@@ -131,7 +132,7 @@ task Clean {
 }
 
 function CleanImportedModule {
-    Write-Verbose "Unloading all versions of module '$($buildInfo.ModuleName)'." 
+    Write-Verbose "Unloading all versions of module '$($buildInfo.ModuleName)'."
     Remove-Module $buildInfo.ModuleName -ErrorAction SilentlyContinue
     if ($null -ne (Get-Module -Name $buildInfo.ModuleName)) {
         throw "Removed module '$($BuildInfo.ModuleName)' but it's still loaded in the current session."
@@ -140,10 +141,10 @@ function CleanImportedModule {
 
 task BleachClean {
     try {
-        $BuildInfo.BuildRootPath, $BuildInfo.OutputPath | ForEach-Object { 
-            Write-Verbose "Removing folder $_" 
+        $BuildInfo.BuildRootPath, $BuildInfo.OutputPath | ForEach-Object {
+            Write-Verbose "Removing folder $_"
             Remove-Item -Path $_ -Recurse -Force -ErrorAction SilentlyContinue | Out-Null
-            Write-Verbose "Creating folder $_" 
+            Write-Verbose "Creating folder $_"
             New-Item $_ -ItemType Directory -Force | Out-Null
         }
     }
@@ -155,7 +156,7 @@ task BleachClean {
 task InitDependencies {
     # init dependencies
     if ($script:BuildConfig.Keys -contains 'Dependency') {
-        $script:BuildConfig.Dependency | Initialize-BuildDependency 
+        $script:BuildConfig.Dependency | Initialize-BuildDependency
     }
 }
 
@@ -172,7 +173,7 @@ task TestSyntax {
             [Ref]$tokens,
             [Ref]$parseErrors
         )
-        
+
         if ($parseErrors.Count -gt 0) {
             $parseErrors | Write-Error
 
@@ -201,7 +202,7 @@ task TestAttributeSyntax {
         # Test attribute syntax
         $attributes = $ast.FindAll( {
                 param( $ast )
-                
+
                 $ast -is [System.Management.Automation.Language.AttributeAst]
             },
             $true
@@ -255,7 +256,7 @@ task MergeFunctionsToModuleScript {
     # add module header if it exists
     if ($script:BuildConfig.ModuleScript.Keys -contains 'Header') {
         $content += $script:BuildConfig.ModuleScript.Header
-        $content += "`r`n`r`n"		
+        $content += "`r`n`r`n"
     }
 
     # get each build item to add to the module script
@@ -303,7 +304,7 @@ task UpdateMetadata {
     if ($scriptsToProcess) {
         Write-Verbose "ScriptsToProcess: Found $($scriptsToProcess.Count) scripts to add to manifest ScriptsToProcess key."
         $manifestData.ScriptsToProcess = ($scriptsToProcess | `
-                ForEach-Object { 
+                ForEach-Object {
                 if ($_.FullName -match '(?<name>script.*\\.*\.ps1)') {
                     Write-Verbose "Adding '$($matches.name)' to ScriptsToProcess"
                     $matches.name
@@ -337,7 +338,7 @@ task UpdateMetadata {
         if ($manifestData.PrivateData.PSData.Keys -notcontains 'ProjectUri') {
             $manifestData.PrivateData.PSData.ProjectUri = $gitOriginUri
         }
-        
+
         # if we have no release notes then use the notes from the changelog or the changelog URL
         if ($manifestData.PrivateData.PSData.Keys -notcontains 'ReleaseNotes') {
             if ($BuildInfo.ReleaseNotes) {
@@ -406,9 +407,9 @@ task MakeHTMLDocs -If { [bool](exec { pandoc.exe --help }) } {
     } # end foreach
 }
 
-task CopyLicense -If {Test-Path (Join-Path -Path $BuildInfo.ProjectRootPath -ChildPath 'LICENSE')}  {
+task CopyLicense -If {Test-Path (Join-Path -Path $BuildInfo.ProjectRootPath -ChildPath 'LICENSE.*')}  {
     try {
-        Copy-Item -Path (Join-Path -Path $BuildInfo.ProjectRootPath -ChildPath 'LICENSE') -Destination $BuildInfo.BuildPath
+        Copy-Item -Path (Join-Path -Path $BuildInfo.ProjectRootPath -ChildPath 'LICENSE.*') -Destination $BuildInfo.BuildPath
     }
     catch {
         throw
@@ -431,22 +432,22 @@ task PSScriptAnalyzer -If (Get-Module PSScriptAnalyzer -ListAvailable) {
                     # the settings parameter for PSScriptAnalyzer MUST be a
                     # string - see
                     # https://github.com/PowerShell/PSScriptAnalyzer/issues/914
-                    $splat += @{ Settings = "$($BuildInfo.PSSASettingsPath)" } 
+                    $splat += @{ Settings = "$($BuildInfo.PSSASettingsPath)" }
                 }
-                
+
                 Write-Verbose "Running PSScriptAnalyzer default rules on '$path'."
                 Invoke-ScriptAnalyzer @splat | ForEach-Object {
                     $_
                     $_ | Export-Csv (Join-Path -Path $BuildInfo.OutputPath -ChildPath 'psscriptanalyzer.csv') -NoTypeInformation -Append
                 }
-    
+
                 # TODO:We only need to do this becasue the PSScriptAnalyzer
                 # settings file does not allow CustomRulePath and
                 # IncludeDefaultRules together. Once this is resolved this could
                 # should be revisited.
                 # https://github.com/PowerShell/PSScriptAnalyzer/issues/675
                 if ($BuildInfo.PSSACustomRulesPath -ne '') {
-                    $splat += @{ 
+                    $splat += @{
                         CustomRulePath      = "$(Join-Path -Path $BuildInfo.PSSACustomRulesPath -ChildPath '*.psd1')"
                         # TODO: This rule is here as it is throwing an exception on some code
                         #ExcludeRule         = 'Measure-ErrorActionPreference'
@@ -475,7 +476,7 @@ task Pester -If { Get-ChildItem -Path $BuildInfo.TestPath -Filter '*.tests.ps1' 
         OutputFile   = Join-Path -Path $BuildInfo.OutputPath -ChildPath "$($BuildInfo.ModuleName)-nunit.xml"
         PassThru     = $true
         Show         = if ($VerbosePreference -eq 'SilentlyContinue') { 'None' } else { 'all' }
-        Strict       = $true 
+        Strict       = $true
     }
 
     $pester = Invoke-Pester @params
@@ -566,7 +567,7 @@ task PushGitRelease CreateBuildArtifact, {
             GitHubRepository    = $BuildInfo.ModuleName
             GitHubApiKey        = $BuildInfo.GithubApiKey
             Draft               = $true
-        } 
+        }
 
         New-GitHubRelease @params
     }
@@ -613,7 +614,7 @@ task PushManifestBackToGitHub {
     $manifest = Get-GitChange | Where-Object { $_ -eq $relativePath }
     if ($manifest) {
         $pushUrl = exec { git remote get-url origin --push }
-        $authUrl = $pushUrl.Replace('github.com', "$($BuildInfo.GitHubUsername):$($BuildInfo.GitHubApiKey)@github.com") 
+        $authUrl = $pushUrl.Replace('github.com', "$($BuildInfo.GitHubUsername):$($BuildInfo.GitHubApiKey)@github.com")
         Write-Verbose "Pushing '$manifest' back to GitHub with message 'Updated version to $($BuildInfo.ReleaseVersion)'."
         #exec { git pull }
         exec { git add $manifest }
